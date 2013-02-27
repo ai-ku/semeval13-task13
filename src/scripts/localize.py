@@ -74,13 +74,6 @@ def divide_by_words():
             f.write(subs[i])
             g.write(gold[i])
 
-def gold_split():
-    """ Creating gold files into gold/ """
-
-    files = [f for f in os.listdir("local") if fnmatch.fnmatch(f, "*.[vn]" )]
-    for fname in files:
-        os.system("zcat test.gold.gz | grep %s | gzip > gold/%s.gold" % (fname, fname))
-
 def main():
     #divide_by_words()
     divide_by_pos()

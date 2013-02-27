@@ -52,8 +52,9 @@ trial.gz: ../trial/data/semeval-2013-task-10-trial-data.xml
 trial.ngram.gz: trial.gz
 	zcat $< | cut -f2 | gzip > $@
 
-trial.gold.gz: trial.gz
-	zcat $< | cut -f3 | gzip > $@
+trial.gold.gz: ../trial/evaluation/keys/gold-standard/trial.gold-standard.key
+	#zcat $< | cut -f3 | gzip > $@
+	cat $< | gzip > $@
 
 trial.pos.gz: trial.gz
 	zcat $< | perl -lane 'print $$F[2]' | gzip > $@
@@ -112,5 +113,5 @@ trial.knn.gz: trial.sub.gz
 
 # 0=euclid, 1=cosine 2=manhattan 3=maximum 4=jensen 5=zero-mean covariance
 trial.c%.kmeans.gz: trial.spectral.c%.gz
-	zcat $< | wkmeans -k $* -r 5 -s ${SEED} -v | gzip > $@
+	zcat $< | ../bin/wkmeans -k $* -r 5 -s ${SEED} -v | gzip > $@
 
