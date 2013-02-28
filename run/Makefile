@@ -95,8 +95,10 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 	zcat $< | ../bin/fastsubs ${FS_OPTIONS} ukwac.lm.gz | grep -P '^__XX__\t' | gzip > $@
 
 %.localize: #%.sub.gz %.word.gz
-	-mkdir $*/; 
-	-mkdir $*.gold/
+	-mkdir -p $*/word/raw/; 
+	-mkdir -p $*/word/gold/
+	-mkdir -p $*/pos/raw/
+	-mkdir -p $*/pos/gold/
 	../bin/localize.py $*
 
 %.dist: %.sub.gz
@@ -109,7 +111,13 @@ DIS=2#Manhattan
 trial.knn.gz: trial.sub.gz
 	zcat $< | ../bin/preinput.py | ../bin/dists -k ${KNN} -v -d ${DIS} -p ${NCPU} 2> knn${DIS}.err | gzip > $@ 
 
+
+%.unk: %.vocab.gz %.tok.gz # Calculates unknown word ratio
+	unknown.pl $< $*.tok.gz > $@
+
+
 ## CLUSTERING
+# 1. GLOBAL
 
 %.spectral: %.knn.gz
 	${MATLAB_PATH} < ../bin/runsc.m > $*.spectral 2> $*.spectral.err
@@ -118,6 +126,11 @@ trial.knn.gz: trial.sub.gz
 # 0=euclid, 1=cosine 2=manhattan 3=maximum 4=jensen 5=zero-mean covariance
 trial.c%.kmeans.gz: trial.spectral.c%.gz
 	zcat $< | ../bin/wkmeans -k $* -r 5 -s ${SEED} -v | gzip > $@
+
+# 2. Local (word by word)
+
+
+# 3. Local (POS by POS)
 
 %.eval: %.ans
 	#supervised:

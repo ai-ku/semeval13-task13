@@ -11,7 +11,7 @@ import nltk
 #import re
 from nltk.stem.wordnet import WordNetLemmatizer
 
-DATA='../trial/data/semeval-2013-task-10-trial-data.xml'
+DATA='../trial_data/trial.xml'
 TARGET = "__XX__"
 
 lmtzr = WordNetLemmatizer()
@@ -54,7 +54,7 @@ def parse():
             sname = sense['name']
             gold.append(sname)
             gold.append(mean)
-        print inst_id, lemma, pos, "\t", window, '\t', ' '.join(gold)
+        print inst_id, lemma + '.' + pos , pos, "\t", window, '\t', ' '.join(gold)
 
 
 def main():

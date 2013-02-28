@@ -59,7 +59,7 @@ def parse():
             sentences = instance.next
             sentences = sentences[:tokenStart] + TARGET + sentences[tokenEnd:]
             window = ' '.join(get_window(sentences))
-            print inst_id, lemma, pos, "\t", window
+            print inst_id, lemma + '.' + pos, pos, "\t", window
 
 
 def main():
