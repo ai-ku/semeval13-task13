@@ -80,7 +80,7 @@ ukwac.lm.gz: ukwac.vocab.gz ${TRAIN}
 ukwac.ppl.gz: 
 	#zcat $*.tok.gz | \
 	#ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
-	zcat ${TEST} | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm${LM_NGRAM}.gz -ppl - -debug 2 | gzip > $@
+	zcat ${TEST} | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
 
 %.ppl.gz:
 	#test.ppl.gz trial.ppl.gz
