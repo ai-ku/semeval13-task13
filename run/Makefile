@@ -11,7 +11,7 @@ SEED=1  # Random seed
 NCPU=7 # Number of threads/processes to use for parallel computations
 
 MATLAB_PATH=/mnt/opt/matlab/linux64/R2011a/bin/matlab -nojvm -nodisplay
-
+BIN=../bin/
 DATA=../data/tokenized/
 ### 1.3 INPUT files:
 TRAIN=${DATA}train.ukwac.tok.gz # ukWaC Corpus wc=88214600 2247153469 12385653002
@@ -41,28 +41,31 @@ ukwac.tokenize: ## time=1h30m, wc=88214600 2247153469 12385653002
 	tokenize.py
 
 trial.all.gz: trial.gz trial.ngram.gz trial.gold.gz trial.pos.gz trial.word.gz trial.id.gz
+test.all.gz: test.gz test.ngram.gz test.pos.gz test.word.gz test.id.gz
 	
-trial.tok.gz: ../trial
-	../bin/trial_data_parser.py | gzip > $@
+%.tok.gz: ../%_data
+	# tokenize method trial.tok.gz test.tok.gz
+	../bin/$*_data_parser.py | gzip > $@
 
 #TODO prepare.% #training/test
-trial.gz: ../trial/data/semeval-2013-task-10-trial-data.xml
-	../bin/trial_data_parser.py | gzip > $@
+%.gz: ../%_data
+	#parse method
+	../bin/$*_data_parser.py | gzip > $@
 
-trial.ngram.gz: trial.gz
+%.ngram.gz: %.gz
 	zcat $< | cut -f2 | gzip > $@
 
-trial.gold.gz: ../trial/evaluation/keys/gold-standard/trial.gold-standard.key
+trial.gold.gz: ../trial_data/evaluation/keys/gold-standard/trial.gold-standard.key
 	#zcat $< | cut -f3 | gzip > $@
 	cat $< | gzip > $@
 
-trial.pos.gz: trial.gz
+%.pos.gz: %.gz
 	zcat $< | perl -lane 'print $$F[2]' | gzip > $@
 	
-trial.word.gz: trial.gz
+%.word.gz: %.gz
 	zcat $< | perl -lane 'print $$F[1]' | gzip > $@
 
-trial.id.gz: trial.gz
+%.id.gz: %.gz
 	zcat $< | perl -lane 'print $$F[0]' | gzip > $@
 
 %.vocab.gz: ${DATA}%.tok.gz  ## LM_VOCAB=100: time=2219s wc=672335 672009 5983977
@@ -79,8 +82,9 @@ ukwac.ppl.gz:
 	#ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
 	zcat ${TEST} | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm${LM_NGRAM}.gz -ppl - -debug 2 | gzip > $@
 
-trial.ppl.gz:
-	zcat trial.tok.gz | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm${LM_NGRAM}.gz -ppl - -debug 2 | gzip > $@
+%.ppl.gz:
+	#test.ppl.gz trial.ppl.gz
+	zcat $*.tok.gz | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm${LM_NGRAM}.gz -ppl - -debug 2 | gzip > $@
 
 ### 2.3 FASTSUBS options:
 FS_NSUB=100 # go until you have this many substitutes
@@ -114,4 +118,14 @@ trial.knn.gz: trial.sub.gz
 # 0=euclid, 1=cosine 2=manhattan 3=maximum 4=jensen 5=zero-mean covariance
 trial.c%.kmeans.gz: trial.spectral.c%.gz
 	zcat $< | ../bin/wkmeans -k $* -r 5 -s ${SEED} -v | gzip > $@
+
+%.eval: %.ans
+	#supervised:
+	java -jar ${BIN}fscore.jar $< ../evaluation/unsup_eval/keys/all.key n >$*.fn.eval
+	java -jar ${BIN}fscore.jar $< ../evaluation/unsup_eval/keys/all.key v > $*.fv.eval
+	java -jar ${BIN}fscore.jar $< ../evaluation/unsup_eval/keys/all.key all > $*.fa.eval
+	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key n >$*.vn.eval
+	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key v >$*.vv.eval
+	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key all >$*.va.eval
+	tail -n 1 $*.*.eval > $@
 
