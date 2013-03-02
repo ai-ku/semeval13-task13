@@ -104,13 +104,10 @@ def calc_dists():
         #command = "cat %s | ../src/scripts/preinput.py > /home/tyr/Desktop/a.rm" \
                         #% (fn)
         for d in distances:
-            #command = "..bin/dists -d %d < %s > %s.dist.%d" % (d, fn, fn, d)
-            #command = "../bin/dists -d %d < %s > %s/%s.dist.%d"
-            command = 'cat %s | ../bin/preinput.py | ../bin/dists -d %d -p %d | gzip > %s'
-            print command % (fulln, d, NCPU, dest + fn + '.dist.' + str(d))
+            command = 'cat %s | ../bin/preinput.py | ../bin/dists -d %d -p %d > %s'
+            command = command % (fulln, d, NCPU, dest + fn + '.knn.' + str(d))
+            print command
             os.system(command)
-            exit()
-
 
 def wkmeans():
     pass
