@@ -84,7 +84,7 @@ ukwac.ppl.gz:
 
 %.ppl.gz:
 	#test.ppl.gz trial.ppl.gz
-	zcat $*.tok.gz | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm${LM_NGRAM}.gz -ppl - -debug 2 | gzip > $@
+	zcat $*.tok.gz | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
 
 ### 2.3 FASTSUBS options:
 FS_NSUB=100 # go until you have this many substitutes
@@ -101,9 +101,14 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 	-mkdir -p $*/pos/gold/
 	../bin/localize.py $*
 
-%.dist: %.sub.gz
+%.unk: %.vocab.gz %.tok.gz # Calculates unknown word ratio
+	unknown.pl $< $*.tok.gz > $@
+
 
 ### DISTANCE METRICS
+
+
+# 1. Global:
 
 KNN=50
 DIS=2#Manhattan
@@ -111,9 +116,10 @@ DIS=2#Manhattan
 trial.knn.gz: trial.sub.gz
 	zcat $< | ../bin/preinput.py | ../bin/dists -k ${KNN} -v -d ${DIS} -p ${NCPU} 2> knn${DIS}.err | gzip > $@ 
 
+# 2. Local:
 
-%.unk: %.vocab.gz %.tok.gz # Calculates unknown word ratio
-	unknown.pl $< $*.tok.gz > $@
+%.knn:
+	../bin/task13.py -f calc_dists -i $* -r "*"
 
 
 ## CLUSTERING

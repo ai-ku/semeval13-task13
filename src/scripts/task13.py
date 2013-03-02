@@ -5,14 +5,15 @@ __author__ = "Osman Baskaya"
 
 import sys
 import os
-import fnmatch
 from optparse import OptionParser
-import shutil
-from scipy.sparse import coo_matrix
+from utils import get_files, read2sparse
 #from scipy.sparse.linalg import svds
-import numpy as np
 #from cluster_analysis import calc_perp_from_arr
+# CONSTANTS
+from constants import NCPU
 import gzip
+
+
 
 CWD = os.getcwd()
 
@@ -36,6 +37,8 @@ parser.add_option("-r", "--regex", dest="regex", default=None,
                   help="regex for input files", metavar="REGEX")
 parser.add_option("-d", "--distances", dest="distances", default='all',
                   help="distance metric(s)", metavar="DISTANCES")
+parser.add_option("-l", "--langmodel", dest="lm", default='ukwac.lm.gz',
+                  help="language model", metavar="LANGUAGE_MODEL")
 #parser.add_option("-k", "--nfactor", dest="nfactor", default=10,
                   #help="number of factor for svd: default 10", metavar="NFACTOR")
 #parser.add_option("-n", "--n_folds", dest="n_folds", default=5,
@@ -59,95 +62,11 @@ def input_check():
 
 ### Auxiliary functions ###
 
-def get_files(path, regex):
-    return [f for f in os.listdir(path) if fnmatch.fnmatch(f, regex)]
-
 def get_goldtag(fname):
     gold_path = PATH + 'run/gold/'
     lines = gzip.open(gold_path + fname).readlines()
     return [line.split()[1] for line in lines]
 
-def read2sparse(filename, start=1):
-
-    #TODO: Comment ekle ne zaman 1 ne zaman 0 verilmeli
-    
-    lines = open(filename).readlines()
-    col = []
-    row = []
-    data = []
-    for i, line in enumerate(lines):
-        line = line.split()
-        c = line[1::2]
-        col.extend(c)
-        row.extend([i] * len(c))
-        data.extend(line[2::2])
-
-    data = map(float, data)
-    col = map(int, col)
-    if start == 1:
-        col = map(lambda x: x-1, col) # substract 1 from all indexes
-    return coo_matrix((data, (row, col)))
-
-
-def create_arff(fname, mat, gold):
-
-
-    """ create files for Weka input format """
-    
-    gold = [int(g.split('.')[-1]) for g in gold]
-    
-    g = set(gold)
-
-    gold = np.matrix(gold)
-    
-    c = np.concatenate((mat.todense(), gold.T), axis=1)
-
-    ncol = mat.shape[1]
-    #FIXME: pathi relative yap
-    out = "/home/tyr/Desktop/local.weka/" + fname + '.arff'
-    f = open(out, 'w')
-    f.write("@relation %s\n\n" % fname)
-    for i in xrange(ncol):
-        f.write("@attribute a%d numeric\n" % i)
-    s = ','.join(map(str, g))
-    f.write("@attribute class {%s}\n\n" % s)
-    f.write("@data\n")
-    #FIXME: Avoid writing two times
-    np.savetxt(f, c, delimiter=',', fmt='%5f')
-    f.close()
-    lines = open(out).readlines()
-    f = open(out, 'w')
-    for line in lines:
-        if line[0] != '@' and len(line) != 1:
-            line = line.split(',')
-            tag = line[-1].strip()
-            tag = str(int(float(tag))) + '\n'
-            line[-1] = tag
-            f.write(','.join(line))
-            f.write('\n')
-        else:
-            f.write(line)
-    f.close()
-
-
-def writedense(filename, mat):
-
-    # matrix should be dense and it forms: [ [], [], ... ] 
-    f = open(filename, 'w')
-    for row in mat:
-        f.write(' '.join(map(str, row)))
-        f.write('\n')
-    f.close()
-
-def check_dest(dest):
-    
-    n = dest+"_remove"
-    if os.path.isdir(n):
-        shutil.rmtree(n)
-   
-    if os.path.isdir(dest):
-        shutil.move(dest, n)
-    os.mkdir(dest)
 
 ### Important Functions ###
 
@@ -155,34 +74,42 @@ def check_dest(dest):
 func_list = ['calc_dists',]
 
 def calc_dists():
+
     """../bin/calcdists.py -f calc_dists -i 
         /home/tyr/playground/task13/run/isolocal -r "*" -d 4 
         2>/home/tyr/calc.err"""
     
-    # infile, outfile, d (
+    # infile, outfile, d 
 
     if opts.distances == 'all':
         distances = range(0,5) # make calc for all distances
     else:
         distances = [int(opts.distances)]
 
-    dest = opts.outpath
     
     #check_dest(dest) # prepare destination directory
 
-    files = get_files(opts.inpath, opts.regex)
+    input_dir = opts.inpath.replace('.', '/')
+    
+    # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
+    dataset, app_type, data = opts.inpath.split('.')
+    files = get_files(input_dir, opts.regex)
+
+
+    dest = input_dir.replace(data, data+'_dist/')
 
     for fn in files:
         print >> sys.stderr, fn
-        fulln = os.path.join(opts.inpath, fn)
+        fulln = os.path.join(input_dir, fn)
         #command = "cat %s | ../src/scripts/preinput.py > /home/tyr/Desktop/a.rm" \
                         #% (fn)
         for d in distances:
             #command = "..bin/dists -d %d < %s > %s.dist.%d" % (d, fn, fn, d)
-            command = "../bin/dists -d %d < %s > %s/%s.dist.%d" % (d, fulln, dest, fn, d)
-            print command
-            exit()
+            #command = "../bin/dists -d %d < %s > %s/%s.dist.%d"
+            command = 'cat %s | ../bin/preinput.py | ../bin/dists -d %d -p %d | gzip > %s'
+            print command % (fulln, d, NCPU, dest + fn + '.dist.' + str(d))
             os.system(command)
+            exit()
 
 
 def wkmeans():
