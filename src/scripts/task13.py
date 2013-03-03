@@ -6,12 +6,13 @@ __author__ = "Osman Baskaya"
 import sys
 import os
 from optparse import OptionParser
-from utils import get_files, read2sparse
+from utils import get_files, read2sparse, get_uniq_field
 #from scipy.sparse.linalg import svds
 #from cluster_analysis import calc_perp_from_arr
 # CONSTANTS
-from constants import NCPU
+from constants import NCPU, SEED, MATLAB_PATH
 import gzip
+import glob
 
 
 
@@ -71,7 +72,7 @@ def get_goldtag(fname):
 ### Important Functions ###
 
 
-func_list = ['calc_dists',]
+func_list = ['calc_dists', 'run_wkmeans', 'run_spectral']
 
 def calc_dists():
 
@@ -96,7 +97,7 @@ def calc_dists():
     files = get_files(input_dir, opts.regex)
 
 
-    dest = input_dir.replace(data, data+'_dist/')
+    dest = input_dir.replace(data, data+'_knn/')
 
     for fn in files:
         print >> sys.stderr, fn
@@ -109,11 +110,91 @@ def calc_dists():
             print command
             os.system(command)
 
-def wkmeans():
+def spectral():
+    """
+    %.spectral: %.knn.gz
+        ${MATLAB_PATH} < ../bin/runsc.m > $*.spectral 2> $*.spectral.err
+        gzip $*.spectral.c*
+
+        # ayni klasorde calisabiliyor o yuzden cd
+        ${MATLAB_PATH} -r "runiso fname"> $*.spectral 2> $*.spectral.err
+    """
+    
+    input_dir = opts.inpath.replace('.', '/')
+    regex = opts.regex
+    # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
+    dataset, app_type, data = opts.inpath.split('.')
+
+    out_dir = os.path.join(PATH, 'run', input_dir + '_spect')
+    full_in_dir = os.path.join(PATH, 'run', input_dir + '_knn')
+
+    os.chdir('../src/spectral/')
+    command = '{} -r "runspectral {} {}"'
+    command = command.format(MATLAB_PATH, full_in_dir, out_dir)
+    print command
+    os.system(command)
+
+    # matlab call for each word
+    #for fn in files:
+        ##print >> sys.stderr, fn
+        #fulln = os.path.join(PATH, 'run', input_dir, fn)
+        #command = '{} -r "runspectral {} {}"'
+        #command = command.format(MATLAB_PATH, fulln, out_dir)
+        ##print command
+        #os.system(command)
+
+
     pass
 
+def run_spectral():
+    spectral()
+
+def _wkmeans(files, input_dir, k=None):
+    # OUTPUT
+
+    if k is None:
+        k = [5] * len(files)
+
+    for i, fulln in enumerate(files):
+        fn = fulln.replace(input_dir, '') # weed out the filename
+        print >> sys.stderr, fn
+        #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v'
+        command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
+        command = command.format(fulln, k[i], SEED, 'ans/' + fn + '.ans')
+        os.system(command)
+    
+def wkmeans():
+    """ 
+    trial.c%.kmeans.gz: trial.spectral.c%.gz
+        zcat $< | ../bin/wkmeans -k $* -r 5 -s ${SEED} -v | gzip > $@
+    """
+    input_dir = opts.inpath.replace('.', '/') 
+    
+    # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
+    dataset, app_type, data = opts.inpath.split('.')
+
+    if 'spect' in input_dir:
+        clusters = get_uniq_field(input_dir, ind=-1)
+        distances = get_uniq_field(input_dir, ind=3)
+        from itertools import product
+        for d, c in product(distances, clusters):
+            pattern = input_dir + "/*" + d + "*" + c
+            files = glob.glob(pattern)
+            _wkmeans(files, input_dir)
+
+    else:
+        input_dir = input_dir + '_knn'
+        distances = get_uniq_field(input_dir, ind=3)
+
+        for d in distances:
+            #files = get_files(input_dir, "*" + str(d))
+            pattern = input_dir + "*" + str(d)
+            files = glob.glob(pattern)
+            _wkmeans(files, input_dir)
+
+
 def run_wkmeans():
-    pass
+    wkmeans()
 
 def main():
     input_check()

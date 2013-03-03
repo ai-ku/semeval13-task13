@@ -121,11 +121,17 @@ trial.knn.gz: trial.sub.gz
 %.knn:
 	../bin/task13.py -f calc_dists -i $* -r "*"
 
+%.wkmeans:
+	../bin/task13.py -f run_wkmeans -i $* -r "*"
+
+
+%.spectral:
+	../bin/task13.py -f run_spectral -i $* -r "*" > $@ 2> $@.err
 
 ## CLUSTERING
 # 1. GLOBAL
 
-%.spectral: %.knn.gz
+global.%.spectral: %.knn.gz
 	${MATLAB_PATH} < ../bin/runsc.m > $*.spectral 2> $*.spectral.err
 	gzip $*.spectral.c*
 
@@ -137,6 +143,15 @@ trial.c%.kmeans.gz: trial.spectral.c%.gz
 
 
 # 3. Local (POS by POS)
+# =======
+
+
+ungraded.%.gold:
+	-mkdir -p $*/pos/ungraded_gold
+	-mkdir -p $*/word/ungraded_gold
+	for i in $*/word/gold/ $*/pos/gold/; do \
+		../bin/ung_gold.py $$i; \
+	done
 
 %.eval: %.ans
 	#supervised:
@@ -147,4 +162,12 @@ trial.c%.kmeans.gz: trial.spectral.c%.gz
 	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key v >$*.vv.eval
 	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key all >$*.va.eval
 	tail -n 1 $*.*.eval > $@
+
+%.clean: %/
+	rm -rf $*/pos/gold/*
+	rm -rf $*/pos/raw/*
+	rm -rf $*/pos/ungraded_gold/*
+	rm -rf $*/word/gold/*
+	rm -rf $*/word/raw/*
+	rm -rf $*/word/ungraded_gold/*
 

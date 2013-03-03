@@ -38,9 +38,7 @@ runiso.m: check
 	test -e L2_distance.m || ln -s ../src/iso/L2_distance.m
 
 readsparse.mexa64: check
-	cd ../src/readsparse/; make
-	test -e readsparse.mexa64 || ln -s ../src/readsparse/readsparse.mexa64
-	test -e readsparseidx.mexa64 || ln -s ../src/readsparse/readsparseidx.mexa64
+	test -e $@ || ln -s ../src/readsparse.mexa64
 
 scode: check
 	#test -e ../src/scode || (cd ../src/ ; git clone ${SCODE_GIT_REPO} ; git checkout ${SCODE_GIT_TAG}) 

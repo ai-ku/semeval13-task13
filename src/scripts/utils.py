@@ -9,9 +9,16 @@ import shutil
 import numpy as np
 from scipy.sparse import coo_matrix
 
+# ask.v.knn.3.spectral.c2
+# argument.n.knn.2
 
 def get_files(path, regex):
     return [f for f in os.listdir(path) if fnmatch.fnmatch(f, regex)]
+
+def get_uniq_field(path, ind=-1):
+
+    files = os.listdir(path)
+    return set([f.split('.')[ind] for f in files])
 
 def refresh_temp():
     temp = 'temp'

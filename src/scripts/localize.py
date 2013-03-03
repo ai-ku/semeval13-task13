@@ -84,7 +84,7 @@ def divide_by_words():
                 g.write(gold[i])
 
 def main():
-    #divide_by_words()
+    divide_by_words()
     divide_by_pos()
 
 
