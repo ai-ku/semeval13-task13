@@ -6,7 +6,7 @@ __author__ = "Osman Baskaya"
 import sys
 import os
 from optparse import OptionParser
-from utils import get_files, read2sparse, get_uniq_field
+from utils import get_files, get_uniq_field#, read2sparse
 #from scipy.sparse.linalg import svds
 #from cluster_analysis import calc_perp_from_arr
 # CONSTANTS
@@ -160,7 +160,7 @@ def _wkmeans(files, input_dir, k=None):
         print >> sys.stderr, fn
         #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v'
         command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
-        command = command.format(fulln, k[i], SEED, 'ans/' + fn + '.ans')
+        command = command.format(fulln, k[i], SEED, 'ans1/' + fn + '.ans')
         os.system(command)
     
 def wkmeans():
@@ -183,13 +183,13 @@ def wkmeans():
             _wkmeans(files, input_dir)
 
     else:
-        input_dir = input_dir + '_knn'
+        input_dir = input_dir + '_knn/'
         distances = get_uniq_field(input_dir, ind=3)
-
         for d in distances:
             #files = get_files(input_dir, "*" + str(d))
             pattern = input_dir + "*" + str(d)
             files = glob.glob(pattern)
+            print files
             _wkmeans(files, input_dir)
 
 

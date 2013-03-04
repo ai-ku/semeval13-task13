@@ -41,7 +41,7 @@ ukwac.tokenize: ## time=1h30m, wc=88214600 2247153469 12385653002
 	tokenize.py
 
 trial.all.gz: trial.gz trial.ngram.gz trial.gold.gz trial.pos.gz trial.word.gz trial.id.gz
-test.all.gz: test.gz test.ngram.gz test.pos.gz test.word.gz test.id.gz
+test.all.gz: test.gz test.ngram.gz test.pos.gz test.word.gz test.id.gz 
 	
 %.tok.gz: ../%_data
 	# tokenize method trial.tok.gz test.tok.gz
@@ -162,6 +162,9 @@ ungraded.%.gold:
 	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key v >$*.vv.eval
 	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key all >$*.va.eval
 	tail -n 1 $*.*.eval > $@
+
+%.gz.clean:
+	rm -rf $*.gz $*.word.gz $*.id.gz $*.pos.gz $*.ngram.gz $*.gold.gz
 
 %.clean: %/
 	rm -rf $*/pos/gold/*

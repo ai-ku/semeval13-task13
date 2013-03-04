@@ -6,6 +6,22 @@ __author__ = "Osman Baskaya"
 import sys
 import os
 from utils import get_files
+import gzip
+
+def convert_ungraded():
+
+    lines = gzip.open('trial.gold.gz').readlines()
+
+    for line in lines:
+        line = line.split()
+        max_sense_id = ''; max_rating = -1.0
+        for sense in line[2:]:
+            sense_tup= sense.split('/')
+            sense_id, rating = sense_tup[0], float(sense_tup[1])
+            if rating > max_rating:
+                max_sense_id, max_rating = sense_id, rating
+        print max_sense_id
+
 
 
 def max_grade(input_dir, out_dir=None):
@@ -19,7 +35,6 @@ def max_grade(input_dir, out_dir=None):
     for fn in files:
         fname = os.path.join(input_dir, fn)
         if fn.endswith('.gz'):
-            import gzip
             f = gzip.open(fname)
         else:
             f = open(fname)
@@ -45,6 +60,7 @@ def max_grade(input_dir, out_dir=None):
 def main():
     input_dir = sys.argv[1]
     max_grade(input_dir)
+    #convert_ungraded()
 
 if __name__ == '__main__':
     main()
