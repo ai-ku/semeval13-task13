@@ -16,6 +16,7 @@ import gzip
 import os
 import fnmatch
 import sys
+from collections import defaultdict
 
 #PATH = '../../run/'
 DATASET = sys.argv[1] # dataset name
@@ -27,27 +28,27 @@ def divide_by_pos():
     subs = gzip.open(DATASET + '.sub.gz').readlines()
     if DATASET == 'trial':
         gold = gzip.open(DATASET + '.gold.gz').readlines()
+    
+    
+    
+    posd = defaultdict(list)
+    goldd = defaultdict(list)
 
-    filename = ""
-    f = None
-    g = None
     for i, line in enumerate(pos):
         inst = line.strip()
-        if filename == inst:
-            f.write(subs[i])
-            if DATASET == 'trial':
-                g.write(gold[i])
-        else:
-            if f is not None:
-                f.close()
-                if DATASET == 'trial':
-                    g.close()
-            filename = inst
-            f = open(OUT + 'raw/' + filename, 'a+')
-            f.write(subs[i])
-            if DATASET == 'trial':
-                g = gzip.open(OUT + 'gold/' + filename + '.gold.gz', 'a+')
-                g.write(gold[i])
+        posd[inst].append(subs[i])
+        if DATASET == 'trial':
+            goldd[inst].append(gold[i])
+
+
+    for inst in posd.keys():
+        f = open(OUT + 'raw/' + inst, 'w')
+        f.write(''.join(posd[inst]))
+        f.close()
+        if DATASET == 'trial':
+            f = open(OUT + 'gold/' + inst + '.gold', 'w')
+            f.write(''.join(goldd[inst]))
+            f.close()
 
 
 def divide_by_words():
@@ -62,26 +63,25 @@ def divide_by_words():
     if DATASET == 'trial':
         gold = gzip.open(DATASET + '.gold.gz').readlines()
 
-    filename = ""
-    f = None
-    g = None
+    wordd = defaultdict(list)
+    goldd = defaultdict(list)
+
     for i, line in enumerate(words):
         inst = line.strip()
-        if filename == inst:
-            f.write(subs[i])
-            if DATASET == 'trial':
-                g.write(gold[i])
-        else:
-            if f is not None:
-                f.close()
-                if DATASET == 'trial':
-                    g.close()
-            filename = inst
-            f = open(OUT + 'raw/' + filename, 'a+')
-            f.write(subs[i])
-            if DATASET == 'trial':
-                g = gzip.open(OUT + 'gold/' + filename + '.gold.gz', 'a+')
-                g.write(gold[i])
+        wordd[inst].append(subs[i])
+        if DATASET == 'trial':
+            goldd[inst].append(gold[i])
+
+
+    for inst in wordd.keys():
+        f = open(OUT + 'raw/' + inst, 'w')
+        f.write(''.join(wordd[inst]))
+        f.close()
+        if DATASET == 'trial':
+            f = open(OUT + 'gold/' + inst + '.gold', 'w')
+            f.write(''.join(goldd[inst]))
+            f.close()
+
 
 def main():
     divide_by_words()

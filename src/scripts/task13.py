@@ -40,10 +40,10 @@ parser.add_option("-d", "--distances", dest="distances", default='all',
                   help="distance metric(s)", metavar="DISTANCES")
 parser.add_option("-l", "--langmodel", dest="lm", default='ukwac.lm.gz',
                   help="language model", metavar="LANGUAGE_MODEL")
+parser.add_option("-n", "--nsubs", dest="nsubs", default='12',
+                  help="Number of substitition", metavar="NUMBER_OF_SUBS")
 #parser.add_option("-k", "--nfactor", dest="nfactor", default=10,
                   #help="number of factor for svd: default 10", metavar="NFACTOR")
-#parser.add_option("-n", "--n_folds", dest="n_folds", default=5,
-                  #help="number of folds for classifiers: default 10", metavar="NFOLDS")
 
 (opts, args) = parser.parse_args() 
 mandatories = ['func_name', 'inpath', 'regex']
@@ -72,7 +72,7 @@ def get_goldtag(fname):
 ### Important Functions ###
 
 
-func_list = ['calc_dists', 'run_wkmeans', 'run_spectral']
+func_list = ['calc_dists', 'run_wkmeans', 'run_spectral', 'run_wordsub']
 
 def calc_dists():
 
@@ -150,24 +150,30 @@ def run_spectral():
     spectral()
 
 def _wkmeans(files, input_dir, k=None):
-    # OUTPUT
+
+
+    dataset, app_type = input_dir.split('/')[:2]
+    path = os.path.join(dataset, app_type, 'ans') + '/'
 
     if k is None:
         k = [5] * len(files)
+    elif isinstance(k, int):
+        k = [k] * len(files)
+
 
     for i, fulln in enumerate(files):
         fn = fulln.replace(input_dir, '') # weed out the filename
         print >> sys.stderr, fn
         #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v'
         command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
-        command = command.format(fulln, k[i], SEED, 'ans1/' + fn + '.ans')
+        command = command.format(fulln, k[i], SEED, path + fn + '.ans')
         os.system(command)
     
 def wkmeans():
-    """ 
-    trial.c%.kmeans.gz: trial.spectral.c%.gz
-        zcat $< | ../bin/wkmeans -k $* -r 5 -s ${SEED} -v | gzip > $@
-    """
+
+    """ make trial.word.spectral.wkmeans """
+
+    
     input_dir = opts.inpath.replace('.', '/') 
     
     # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
@@ -180,7 +186,8 @@ def wkmeans():
         for d, c in product(distances, clusters):
             pattern = input_dir + "/*" + d + "*" + c
             files = glob.glob(pattern)
-            _wkmeans(files, input_dir)
+            k = int(c.replace('c', ''))
+            _wkmeans(files, input_dir, k)
 
     else:
         input_dir = input_dir + '_knn/'
@@ -189,12 +196,51 @@ def wkmeans():
             #files = get_files(input_dir, "*" + str(d))
             pattern = input_dir + "*" + str(d)
             files = glob.glob(pattern)
-            print files
             _wkmeans(files, input_dir)
 
 
 def run_wkmeans():
     wkmeans()
+
+
+def wordsub():
+    input_dir = opts.inpath.replace('.', '/') 
+    # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
+    dataset, app_type, data = opts.inpath.split('.')
+
+    nsubs = int(opts.nsubs)
+
+    seed = SEED
+    files = os.listdir(input_dir)
+    for fname in files:
+        fn = '.'.join(fname.split('.')[:2])
+        fulln = os.path.join(input_dir, fname)
+        outfn = dataset + '/' + app_type + '/wordsubs/' + fn + '.pairs.gz'
+        open(outfn, 'w') # for >> below 
+        for i in xrange(nsubs):
+            command = """zcat {} | grep -v '^</s>' | ../bin/wordsub.pl -s {} | 
+                                            gzip >> {} """
+            command = command.format(fulln, seed, outfn)
+            os.system(command)
+            seed += 1
+
+def run_wordsub():
+    wordsub()
+
+def scode():
+
+
+    """ WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v -a
+    wordsub.%.scode.gz: wordsub.%.pairs.gz 
+        zcat $< | scode ${WSC_OPTIONS} | gzip > $@ """
+
+
+    pass
+
+
+def run_scode():
+    scode()
+    
 
 def main():
     input_check()
@@ -205,4 +251,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -10,6 +10,10 @@ import gzip
 
 def convert_ungraded():
 
+    """ This method converts whole data to trial.ungraded.gold 
+        ../ung_gold.py > trial.ungraded.gold
+    """
+
     lines = gzip.open('trial.gold.gz').readlines()
 
     for line in lines:
@@ -20,7 +24,7 @@ def convert_ungraded():
             sense_id, rating = sense_tup[0], float(sense_tup[1])
             if rating > max_rating:
                 max_sense_id, max_rating = sense_id, rating
-        print max_sense_id
+        print ' '.join(line[:2]), max_sense_id
 
 
 
@@ -58,9 +62,9 @@ def max_grade(input_dir, out_dir=None):
     
 
 def main():
-    input_dir = sys.argv[1]
-    max_grade(input_dir)
-    #convert_ungraded()
+    #input_dir = sys.argv[1]
+    #max_grade(input_dir)
+    convert_ungraded()
 
 if __name__ == '__main__':
     main()

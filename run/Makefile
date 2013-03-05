@@ -1,5 +1,6 @@
 ### 1. GENERAL SETUP
 
+
 ### 1.1 BIN INSTALLATION
 bin:
 	cd ../bin; make
@@ -16,6 +17,9 @@ DATA=../data/tokenized/
 ### 1.3 INPUT files:
 TRAIN=${DATA}train.ukwac.tok.gz # ukWaC Corpus wc=88214600 2247153469 12385653002
 TEST=${DATA}test.ukwac.tok.gz  # ukWaC Test Corpus wc= 39203 998193 5509360
+EVAL=../trial_data/evaluation/
+GOLD=../trial_data/evaluation/keys/gold-standard/trial.gold-standard.key
+BASELINE=../trial_data/evaluation/keys/baselines/
 
 
 ### 2. COMMON FILES
@@ -44,7 +48,8 @@ trial.all.gz: trial.gz trial.ngram.gz trial.gold.gz trial.pos.gz trial.word.gz t
 test.all.gz: test.gz test.ngram.gz test.pos.gz test.word.gz test.id.gz 
 	
 %.tok.gz: ../%_data
-	# tokenize method trial.tok.gz test.tok.gz
+	#tokenize method trial.tok.gz test.tok.gz
+	# method tokenize diye duzeltmek gerekiyor.
 	../bin/$*_data_parser.py | gzip > $@
 
 #TODO prepare.% #training/test
@@ -62,11 +67,14 @@ trial.gold.gz: ../trial_data/evaluation/keys/gold-standard/trial.gold-standard.k
 %.pos.gz: %.gz
 	zcat $< | perl -lane 'print $$F[2]' | gzip > $@
 	
+%.target.gz: %.gz
+	zcat $< | perl -lane 'print $$F[3]' | gzip > $@
+
 %.word.gz: %.gz
 	zcat $< | perl -lane 'print $$F[1]' | gzip > $@
 
 %.id.gz: %.gz
-	zcat $< | perl -lane 'print $$F[0]' | gzip > $@
+	zcat $< | perl -lane 'print $$F[1]," ", $$F[0]' | gzip > $@
 
 %.vocab.gz: ${DATA}%.tok.gz  ## LM_VOCAB=100: time=2219s wc=672335 672009 5983977
 	#awk '{if ($2 >= 20) {print $0}}' | gzip > $@
@@ -107,7 +115,6 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 
 ### DISTANCE METRICS
 
-
 # 1. Global:
 
 KNN=50
@@ -122,6 +129,10 @@ trial.knn.gz: trial.sub.gz
 	../bin/task13.py -f calc_dists -i $* -r "*"
 
 %.wkmeans:
+
+	#make trial.word.raw_spect.wkmeans
+	#make trial.word.raw.wkmeans
+
 	../bin/task13.py -f run_wkmeans -i $* -r "*"
 
 
@@ -145,6 +156,35 @@ trial.c%.kmeans.gz: trial.spectral.c%.gz
 # 3. Local (POS by POS)
 # =======
 
+# for word, not applicable for pos
+
+
+### WORDSUB ###
+
+%.prewordsub.gz: #%.sub.gz %.target.gz
+	#-mkdir $*/word/subs/
+	../bin/pre_wordsub.py $*.sub.gz $*.target.gz  | gzip > $@
+
+WORDSUB=12 # Number of random substitutes per word
+%.wordsub:
+	../bin/task13.py -f run_wordsub -i $* -r "*" --nsubs=${WORDSUB} #> $@ 2> $@.err
+
+wordsub.%.pairs.gz: #%.sub.gz
+	perl -le 'print "trial.prewordsub.gz" for 1..${WORDSUB}' | xargs zcat | grep -v '^</s>' | ../bin/wordsub.pl -s ${SEED} | gzip > $@
+
+
+%.pairs.gz: #%.sub.gz
+	perl -le 'print "trial/word/subs/add.v.sub.gz" for 1..${WORDSUB}' | xargs zcat | grep -v '^</s>' | ../bin/wordsub.pl -s ${SEED} | gzip > $@
+
+
+
+### SCODE ###
+
+WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v -a
+wordsub.%.scode.gz: wordsub.%.pairs.gz 
+	zcat $< | scode ${WSC_OPTIONS} | gzip > $@
+
+### EVALUATIONS ###
 
 ungraded.%.gold:
 	-mkdir -p $*/pos/ungraded_gold
@@ -153,15 +193,35 @@ ungraded.%.gold:
 		../bin/ung_gold.py $$i; \
 	done
 
-%.eval: %.ans
+
+%.key: baselines/
+	java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} ${BASELINE}$@ > baselines/$*.sup.gkgamma.eval
+	java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD} ${BASELINE}$@ > baselines/$*.sup.ji.eval
+	java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD} ${BASELINE}$@ >  baselines/$*.sup.wndcg.eval
+	java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD} ${BASELINE}$@ > baselines/$*.sup.wtau.eval
+	#unsupervised
+	#java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fbcubed.eval
+	#java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fnmi.eval
+	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} ${BASELINE}$@  all > baselines/$*.uns.vm.eval
+	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} ${BASELINE}$@ all > baselines/$*.uns.fs.eval
+	tail -n 2 baselines/$*.*.eval > baselines/$*.scores
+	rm -rf baselines/*.eval
+
+
+
+%.ans:
 	#supervised:
-	java -jar ${BIN}fscore.jar $< ../evaluation/unsup_eval/keys/all.key n >$*.fn.eval
-	java -jar ${BIN}fscore.jar $< ../evaluation/unsup_eval/keys/all.key v > $*.fv.eval
-	java -jar ${BIN}fscore.jar $< ../evaluation/unsup_eval/keys/all.key all > $*.fa.eval
-	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key n >$*.vn.eval
-	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key v >$*.vv.eval
-	java -jar ${BIN}vmeasure.jar $< ../evaluation/unsup_eval/keys/all.key all >$*.va.eval
-	tail -n 1 $*.*.eval > $@
+	java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} eval/$@ > eval/$*.sup.gkgamma.eval
+	java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD}  eval/$@ > eval/$*.sup.ji.eval
+	java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD}  eval/$@ >  eval/$*.sup.wndcg.eval
+	java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD}  eval/$@ > eval/$*.sup.wtau.eval
+	#unsupervised
+	#java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} eval/$@ > eval/$*.uns.fbcubed.eval
+	#java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} eval/$@ > eval/$*.uns.fnmi.eval
+	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} eval/$@  all > eval/$*.uns.vm.eval
+	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} eval/$@ all > eval/$*.uns.fs.eval
+	tail -n 2 eval/$*.*.eval > eval/$*.scores
+	rm -rf eval/*.eval
 
 %.gz.clean:
 	rm -rf $*.gz $*.word.gz $*.id.gz $*.pos.gz $*.ngram.gz $*.gold.gz

@@ -39,7 +39,7 @@ def parse():
         inst_id = instance['id']
         lemma = instance['lemma']
         pos = instance['partOfSpeech']
-        #target = instance['token']
+        target = instance['token']
         tokenEnd = int(instance['tokenEnd'])
         tokenStart = int(instance['tokenStart'])
         sentences = instance.next
@@ -54,7 +54,7 @@ def parse():
             sname = sense['name']
             gold.append(sname)
             gold.append(mean)
-        print inst_id, lemma + '.' + pos , pos, "\t", window, '\t', ' '.join(gold)
+        print inst_id, lemma + '.' + pos , pos, target, "\t", window, '\t', ' '.join(gold)
 
 
 def main():
