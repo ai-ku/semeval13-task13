@@ -230,12 +230,37 @@ def run_wordsub():
 def scode():
 
 
-    """ WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v -a
+    """ call exp in make: make trial.word.wordsubs.scode.gz""" 
+
+    """ WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v 
     wordsub.%.scode.gz: wordsub.%.pairs.gz 
         zcat $< | scode ${WSC_OPTIONS} | gzip > $@ """
 
 
-    pass
+    awk_com = ""
+    uniq = True    
+    if uniq:
+        awk_com = """awk 'BEGIN {count=1} {print $1 count "\\t" $2; count=count+1}'"""
+
+
+    WSC_OPTIONS = "-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s {} -v -a".format(SEED)
+
+    # trial.word.wordsub
+    input_dir = opts.inpath.replace('.', '/')
+
+    # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
+    dataset, app_type, data = opts.inpath.split('.')
+
+    OUT = os.path.join(dataset, app_type) + '/scode/'
+
+    files = os.listdir(input_dir)
+    for fname in files:
+        fulln = os.path.join(input_dir, fname)
+        fn = '.'.join(fname.split('.')[:2])
+        command = "zcat %s | " + awk_com + " | " + "../bin/scode " + WSC_OPTIONS + \
+                                                                    " | gzip > %s"
+        command = command % (fulln, OUT + fn + '.scode.gz')
+        os.system(command)
 
 
 def run_scode():

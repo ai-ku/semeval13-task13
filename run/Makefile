@@ -177,8 +177,18 @@ wordsub.%.pairs.gz: #%.sub.gz
 	perl -le 'print "trial/word/subs/add.v.sub.gz" for 1..${WORDSUB}' | xargs zcat | grep -v '^</s>' | ../bin/wordsub.pl -s ${SEED} | gzip > $@
 
 
+WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
+%.scode.gz: %.pairs.gz 
+	zcat $< | ../bin/scode ${WSC_OPTIONS} | gzip > $@
 
 ### SCODE ###
+
+%.scode:
+	../bin/task13.py -f run_scode -i $* -r "*"  #> $@ 2> $@.err
+
+
+%.kmeans.gz:
+	zcat $< | perl -ne 'print if s/^0://' 
 
 WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v -a
 wordsub.%.scode.gz: wordsub.%.pairs.gz 
@@ -205,7 +215,7 @@ ungraded.%.gold:
 	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} ${BASELINE}$@  all > baselines/$*.uns.vm.eval
 	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} ${BASELINE}$@ all > baselines/$*.uns.fs.eval
 	tail -n 2 baselines/$*.*.eval > baselines/$*.scores
-	rm -rf baselines/*.eval
+	#rm -rf baselines/*.eval
 
 
 
