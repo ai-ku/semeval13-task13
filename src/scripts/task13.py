@@ -149,7 +149,7 @@ def spectral():
 def run_spectral():
     spectral()
 
-def _wkmeans(files, input_dir, k=None):
+def _wkmeans(files, input_dir, head_com='', k=None):
 
 
     dataset, app_type = input_dir.split('/')[:2]
@@ -159,15 +159,23 @@ def _wkmeans(files, input_dir, k=None):
         k = [5] * len(files)
     elif isinstance(k, int):
         k = [k] * len(files)
-
-
     for i, fulln in enumerate(files):
         fn = fulln.replace(input_dir, '') # weed out the filename
-        print >> sys.stderr, fn
+        fn = fn.replace('.gz', '')
+
         #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v'
-        command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
-        command = command.format(fulln, k[i], SEED, path + fn + '.ans')
+        if head_com != '':
+            command = head_com + ' ../bin/wkmeans -k {} -r 5 -s {} -v > {} '
+            command = command.format(fulln, k[i], SEED, path + fn + '.ans')
+        else:
+            command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
+            command = command.format(fulln, k[i], SEED, path + fn + '.ans')
+        
+        
+        
+        print >> sys.stderr, fn
         os.system(command)
+        
     
 def wkmeans():
 
@@ -187,9 +195,9 @@ def wkmeans():
             pattern = input_dir + "/*" + d + "*" + c
             files = glob.glob(pattern)
             k = int(c.replace('c', ''))
-            _wkmeans(files, input_dir, k)
+            _wkmeans(files, input_dir, k=k)
 
-    else:
+    elif 'raw' in input_dir:
         input_dir = input_dir + '_knn/'
         distances = get_uniq_field(input_dir, ind=3)
         for d in distances:
@@ -198,12 +206,23 @@ def wkmeans():
             files = glob.glob(pattern)
             _wkmeans(files, input_dir)
 
+    elif 'scode' in input_dir:
+        head_com = "zcat {} | perl -ne 'print if s/^1://' | cut -f3- | "
+        files = [input_dir + '/' + f for f in os.listdir(input_dir)]
+        _wkmeans(files, input_dir + '/', head_com=head_com)
+
+
 
 def run_wkmeans():
     wkmeans()
 
 
 def wordsub():
+    
+    """ Call Example: make trial.word.subs.wordsub
+
+    """
+
     input_dir = opts.inpath.replace('.', '/') 
     # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
     dataset, app_type, data = opts.inpath.split('.')
@@ -216,13 +235,15 @@ def wordsub():
         fn = '.'.join(fname.split('.')[:2])
         fulln = os.path.join(input_dir, fname)
         outfn = dataset + '/' + app_type + '/wordsubs/' + fn + '.pairs.gz'
-        open(outfn, 'w') # for >> below 
+        #open(outfn, 'w') # for >> below 
         for i in xrange(nsubs):
-            command = """zcat {} | grep -v '^</s>' | ../bin/wordsub.pl -s {} | 
-                                            gzip >> {} """
-            command = command.format(fulln, seed, outfn)
+            command = """ zcat {} | grep -v '^</s>' | \
+                   ../bin/wordsub.py -n {} -u 1 -s {} | gzip > {} """
+            #command = """zcat {} | grep -v '^</s>' | ../bin/wordsub.py -s {} | 
+                                            #gzip >> {} """
+            command = command.format(fulln, nsubs, seed, outfn)
+            print >> sys.stderr, command
             os.system(command)
-            seed += 1
 
 def run_wordsub():
     wordsub()
@@ -237,10 +258,10 @@ def scode():
         zcat $< | scode ${WSC_OPTIONS} | gzip > $@ """
 
 
-    awk_com = ""
-    uniq = True    
-    if uniq:
-        awk_com = """awk 'BEGIN {count=1} {print $1 count "\\t" $2; count=count+1}'"""
+    #awk_com = ""
+    #uniq = True    
+    #if uniq:
+        #awk_com = """awk 'BEGIN {count=1} {print $1 count "\\t" $2; count=count+1}'"""
 
 
     WSC_OPTIONS = "-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s {} -v -a".format(SEED)
@@ -257,8 +278,9 @@ def scode():
     for fname in files:
         fulln = os.path.join(input_dir, fname)
         fn = '.'.join(fname.split('.')[:2])
-        command = "zcat %s | " + awk_com + " | " + "../bin/scode " + WSC_OPTIONS + \
-                                                                    " | gzip > %s"
+        #command = "zcat %s | " + awk_com + " | " + "../bin/scode " + WSC_OPTIONS + \
+                                                                    #" | gzip > %s"
+        command = "zcat %s  | ../bin/scode " + WSC_OPTIONS + " | gzip > %s"
         command = command % (fulln, OUT + fn + '.scode.gz')
         os.system(command)
 

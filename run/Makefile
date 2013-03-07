@@ -22,6 +22,7 @@ GOLD=../trial_data/evaluation/keys/gold-standard/trial.gold-standard.key
 BASELINE=../trial_data/evaluation/keys/baselines/
 
 
+FILES=$(shell find trial/word/ans/ -name *scode.ans | sort)
 ### 2. COMMON FILES
 
 ### 2.1 GOLD answers:
@@ -163,11 +164,12 @@ trial.c%.kmeans.gz: trial.spectral.c%.gz
 
 %.prewordsub.gz: #%.sub.gz %.target.gz
 	#-mkdir $*/word/subs/
+	# call: trial.prewordsub.gz
 	../bin/pre_wordsub.py $*.sub.gz $*.target.gz  | gzip > $@
 
 WORDSUB=12 # Number of random substitutes per word
 %.wordsub:
-	../bin/task13.py -f run_wordsub -i $* -r "*" --nsubs=${WORDSUB} #> $@ 2> $@.err
+	../bin/task13.py -f run_wordsub -i $* -r "*" --nsubs=${WORDSUB} 2> $@.err
 
 wordsub.%.pairs.gz: #%.sub.gz
 	perl -le 'print "trial.prewordsub.gz" for 1..${WORDSUB}' | xargs zcat | grep -v '^</s>' | ../bin/wordsub.pl -s ${SEED} | gzip > $@
@@ -176,10 +178,6 @@ wordsub.%.pairs.gz: #%.sub.gz
 %.pairs.gz: #%.sub.gz
 	perl -le 'print "trial/word/subs/add.v.sub.gz" for 1..${WORDSUB}' | xargs zcat | grep -v '^</s>' | ../bin/wordsub.pl -s ${SEED} | gzip > $@
 
-
-WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
-%.scode.gz: %.pairs.gz 
-	zcat $< | ../bin/scode ${WSC_OPTIONS} | gzip > $@
 
 ### SCODE ###
 
@@ -194,6 +192,10 @@ WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v -a
 wordsub.%.scode.gz: wordsub.%.pairs.gz 
 	zcat $< | scode ${WSC_OPTIONS} | gzip > $@
 
+trial.word.%.scode.ans: trial/word/ans/%.scode.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
+	../bin/calc_clust.py $< trial/word/scode/$*.scode.gz \
+	trial/word/wordsubs/$*.pairs.gz 1 ${WORDSUB} > trial/word/ans/$*.multiclust.ans
+
 ### EVALUATIONS ###
 
 ungraded.%.gold:
@@ -203,20 +205,19 @@ ungraded.%.gold:
 		../bin/ung_gold.py $$i; \
 	done
 
-
+EARG=--no-remapping
 %.key: baselines/
 	java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} ${BASELINE}$@ > baselines/$*.sup.gkgamma.eval
-	java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD} ${BASELINE}$@ > baselines/$*.sup.ji.eval
-	java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD} ${BASELINE}$@ >  baselines/$*.sup.wndcg.eval
-	java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD} ${BASELINE}$@ > baselines/$*.sup.wtau.eval
+	java -jar ${EVAL}supervised/jaccard-index.jar ${EARG} ${GOLD} ${BASELINE}$@ > baselines/$*.sup.ji.eval
+	java -jar ${EVAL}supervised/weighted-ndcg.jar ${EARG} ${GOLD} ${BASELINE}$@ >  baselines/$*.sup.wndcg.eval
+	java -jar ${EVAL}supervised/weighted-tau.jar ${EARG} ${GOLD} ${BASELINE}$@ > baselines/$*.sup.wtau.eval
 	#unsupervised
 	#java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fbcubed.eval
 	#java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fnmi.eval
 	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} ${BASELINE}$@  all > baselines/$*.uns.vm.eval
 	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} ${BASELINE}$@ all > baselines/$*.uns.fs.eval
 	tail -n 2 baselines/$*.*.eval > baselines/$*.scores
-	#rm -rf baselines/*.eval
-
+	rm -rf baselines/*.eval
 
 
 %.ans:

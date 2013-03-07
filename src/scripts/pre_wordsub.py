@@ -16,7 +16,7 @@ wordfile = DATASET + '.word.gz'
 
 
 def pre_wordsub():
-    
+    """make trial.word.subs.gz """   
 
     wlines = gzip.open(wordfile).readlines()
     fastd = defaultdict(list)

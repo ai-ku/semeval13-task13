@@ -15,7 +15,7 @@ import sys
 from itertools import product
 
 
-gold_dir = 'trial/word/ungraded_gold/'
+#gold_dir = 'trial/word/ungraded_gold/'
 
 
 
@@ -40,7 +40,9 @@ def merge_ans_files(ans_dir, ids):
         for filename in files:
             f = open(filename)
             fn = '.'.join(os.path.basename(filename).split('.')[:2])
-            glines = open(os.path.join(goldpath, fn + '.gold')).readlines()
+            goldfile = os.path.join(goldpath, fn + '.gold')
+            print >> sys.stderr, fn, goldfile
+            glines = open(goldfile).readlines()
             for i, line in enumerate(f.readlines()):
                 gold_line = glines[i].split()[:2]
                 nlines.append(' '.join(gold_line) + ' ' + line)
