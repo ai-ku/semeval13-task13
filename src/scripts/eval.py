@@ -53,40 +53,7 @@ def merge_ans_files(ans_dir, ids):
 
 
 
-#def spect_score_eval():
-    
-    #input_dir = 'ans/'
-    #clusters = get_uniq_field(input_dir, ind=5)
-    #distances = get_uniq_field(input_dir, ind=3)
-    #from itertools import product
-    #for d, c in product(distances, clusters):
-        #os.chdir(input_dir)
-        #pattern = "*" + d + "*" + c + '.ans'
-        #files = glob.glob(pattern)
-        #print d, c
-        #os.chdir('../')
-        #for fname in files:
-            #ff = fname.split('.')
-            #word = '.'.join(ff[:2])
-            #command = "../bin/eval.pl < {} -v -g {}"
-            #command = command.format('ans/'+fname, gold_dir+word+'.gold.gz')
-            #os.system(command)
 
-#def score_eval():
-    #input_dir = 'ans1/'
-    #distances = sorted(get_uniq_field(input_dir, ind=3))
-    #for d in distances:
-        #os.chdir(input_dir)
-        #pattern = "*" + d + '.ans'
-        #files = glob.glob(pattern)
-        #print d
-        #os.chdir('../')
-        #for fname in files:
-            #ff = fname.split('.')
-            #word = '.'.join(ff[:2])
-            #command = "../bin/eval.pl < {} -v -g {}"
-            #command = command.format(input_dir+fname, gold_dir+word+'.gold.gz')
-            #os.system(command)
 
 
 

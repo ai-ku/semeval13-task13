@@ -53,6 +53,7 @@ test.all.gz: test.gz test.ngram.gz test.pos.gz test.word.gz test.id.gz
 	# method tokenize diye duzeltmek gerekiyor.
 	../bin/$*_data_parser.py | gzip > $@
 
+
 #TODO prepare.% #training/test
 %.gz: ../%_data
 	#parse method
@@ -180,7 +181,7 @@ wordsub.%.pairs.gz: #%.sub.gz
 
 
 ### SCODE ###
-
+# trial.word.wordsubs.scode
 %.scode:
 	../bin/task13.py -f run_scode -i $* -r "*"  #> $@ 2> $@.err
 
@@ -192,9 +193,11 @@ WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v -a
 wordsub.%.scode.gz: wordsub.%.pairs.gz 
 	zcat $< | scode ${WSC_OPTIONS} | gzip > $@
 
+# wordsub -> scode -> kmeans : needs mapping 
 trial.word.%.scode.ans: trial/word/ans/%.scode.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
 	../bin/calc_clust.py $< trial/word/scode/$*.scode.gz \
-	trial/word/wordsubs/$*.pairs.gz 1 ${WORDSUB} > trial/word/ans/$*.multiclust.ans
+	trial/word/wordsubs/$*.pairs.gz 1 ${WORDSUB} | ../bin/evaluate.py \
+	-g trial/word/gold/$*.gold -m 1 > eval/4/$*.ans
 
 ### EVALUATIONS ###
 

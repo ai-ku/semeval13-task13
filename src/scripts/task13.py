@@ -251,7 +251,7 @@ def run_wordsub():
 def scode():
 
 
-    """ call exp in make: make trial.word.wordsubs.scode.gz""" 
+    """ call exp in make: make trial.word.wordsubs.scode""" 
 
     """ WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v 
     wordsub.%.scode.gz: wordsub.%.pairs.gz 
