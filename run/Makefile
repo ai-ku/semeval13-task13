@@ -1,6 +1,3 @@
-### 1. GENERAL SETUP
-
-
 ### 1.1 BIN INSTALLATION
 bin:
 	cd ../bin; make
@@ -10,7 +7,6 @@ SRILM_PATH=/opt/srilm/bin/i686-m64
 export PATH := ../../bin:.:${SRILM_PATH}:${PATH} # Binaries in the bin directory
 SEED=1  # Random seed
 NCPU=7 # Number of threads/processes to use for parallel computations
-
 MATLAB_PATH=/mnt/opt/matlab/linux64/R2011a/bin/matlab -nojvm -nodisplay
 BIN=../bin/
 DATA=../data/tokenized/
@@ -20,18 +16,6 @@ TEST=${DATA}test.ukwac.tok.gz  # ukWaC Test Corpus wc= 39203 998193 5509360
 EVAL=../trial_data/evaluation/
 GOLD=../trial_data/evaluation/keys/gold-standard/trial.gold-standard.key
 BASELINE=../trial_data/evaluation/keys/baselines/
-
-
-FILES=$(shell find trial/word/ans/ -name *scode.ans | sort)
-### 2. COMMON FILES
-
-### 2.1 GOLD answers:
-
-#wsj.words.gz: ${GOLD}  ## time=1s, wc=1173766 1173766 6412448
-	#zcat $< | perl -lane 'print $$F[0] if /\S/' | gzip > $@
-
-#wsj.pos.gz: ${GOLD}  ## time=1s, wc=1173766 1173766 3793947
-	#zcat $< | perl -lane 'print $$F[1] if /\S/' | gzip > $@
 
 ### 2.2 SRILM options:
 LM_NGRAM=4# n-gram order
@@ -66,6 +50,10 @@ trial.gold.gz: ../trial_data/evaluation/keys/gold-standard/trial.gold-standard.k
 	#zcat $< | cut -f3 | gzip > $@
 	cat $< | gzip > $@
 
+# number of cluster, k
+trial.k.gz: ../trial_data
+	cat ${BASELINE}all-senses.key | awk '{if (NR % 50 == 1) print $$1"\t"NF-2;}' | gzip  > $@
+
 %.pos.gz: %.gz
 	zcat $< | perl -lane 'print $$F[2]' | gzip > $@
 	
@@ -80,21 +68,25 @@ trial.gold.gz: ../trial_data/evaluation/keys/gold-standard/trial.gold-standard.k
 
 %.vocab.gz: ${DATA}%.tok.gz  ## LM_VOCAB=100: time=2219s wc=672335 672009 5983977
 	#awk '{if ($2 >= 20) {print $0}}' | gzip > $@
-	zcat $< | ngram-count -write-order 1 -text - -write - | awk '{if ($$2 >= ${LM_VOCAB}) {print $1}}' | gzip > $@ 
+	zcat $< | ngram-count -write-order 1 -text - -write - | \
+	awk '{if ($$2 >= ${LM_VOCAB}) {print $1}}' | gzip > $@ 
 	#zcat $< | ngram-count -write-order 1 -text - -write - | \
 	#perl -lane 'print $$F[0] if $$F[1] >= ${LM_VOCAB}' | gzip > $@
 
 ukwac.lm.gz: ukwac.vocab.gz ${TRAIN}
-	zcat ${TRAIN} | ngram-count -order ${LM_NGRAM} -kndiscount -interpolate -unk -vocab $< -text - -lm $@
+	zcat ${TRAIN} | ngram-count -order ${LM_NGRAM} -kndiscount \
+	-interpolate -unk -vocab $< -text - -lm $@
 
 ukwac.ppl.gz: 
 	#zcat $*.tok.gz | \
 	#ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
-	zcat ${TEST} | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
+	zcat ${TEST} | ngram -order ${LM_NGRAM} \
+	-unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
 
 %.ppl.gz:
 	#test.ppl.gz trial.ppl.gz
-	zcat $*.tok.gz | ngram -order ${LM_NGRAM} -unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
+	zcat $*.tok.gz | ngram -order ${LM_NGRAM} \
+	-unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
 
 ### 2.3 FASTSUBS options:
 FS_NSUB=100 # go until you have this many substitutes
@@ -114,90 +106,58 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 %.unk: %.vocab.gz %.tok.gz # Calculates unknown word ratio
 	unknown.pl $< $*.tok.gz > $@
 
-
-### DISTANCE METRICS
-
-# 1. Global:
-
 KNN=50
 DIS=2#Manhattan
 
+# calc distance with DIS
 trial.knn.gz: trial.sub.gz
-	zcat $< | ../bin/preinput.py | ../bin/dists -k ${KNN} -v -d ${DIS} -p ${NCPU} 2> knn${DIS}.err | gzip > $@ 
+	zcat $< | ../bin/preinput.py | ../bin/dists -k ${KNN} \
+	-v -d ${DIS} -p ${NCPU} 2> knn${DIS}.err | gzip > $@ 
 
-# 2. Local:
-
+# calc distance with all type of metrics
 %.knn:
 	../bin/task13.py -f calc_dists -i $* -r "*"
 
+#make trial.word.raw_spect.wkmeans
+#make trial.word.raw.wkmeans
 %.wkmeans:
-
-	#make trial.word.raw_spect.wkmeans
-	#make trial.word.raw.wkmeans
-
 	../bin/task13.py -f run_wkmeans -i $* -r "*"
-
 
 %.spectral:
 	../bin/task13.py -f run_spectral -i $* -r "*" > $@ 2> $@.err
 
-## CLUSTERING
-# 1. GLOBAL
-
-global.%.spectral: %.knn.gz
-	${MATLAB_PATH} < ../bin/runsc.m > $*.spectral 2> $*.spectral.err
-	gzip $*.spectral.c*
-
-# 0=euclid, 1=cosine 2=manhattan 3=maximum 4=jensen 5=zero-mean covariance
-trial.c%.kmeans.gz: trial.spectral.c%.gz
-	zcat $< | ../bin/wkmeans -k $* -r 5 -s ${SEED} -v | gzip > $@
-
-# 2. Local (word by word)
-
-
-# 3. Local (POS by POS)
-# =======
-
-# for word, not applicable for pos
-
-
 ### WORDSUB ###
+WORDSUB=12 # Number of random substitutes per word
 
 %.prewordsub.gz: #%.sub.gz %.target.gz
 	#-mkdir $*/word/subs/
 	# call: trial.prewordsub.gz
 	../bin/pre_wordsub.py $*.sub.gz $*.target.gz  | gzip > $@
-
-WORDSUB=12 # Number of random substitutes per word
 %.wordsub:
 	../bin/task13.py -f run_wordsub -i $* -r "*" --nsubs=${WORDSUB} 2> $@.err
 
-wordsub.%.pairs.gz: #%.sub.gz
-	perl -le 'print "trial.prewordsub.gz" for 1..${WORDSUB}' | xargs zcat | grep -v '^</s>' | ../bin/wordsub.pl -s ${SEED} | gzip > $@
-
-
-%.pairs.gz: #%.sub.gz
-	perl -le 'print "trial/word/subs/add.v.sub.gz" for 1..${WORDSUB}' | xargs zcat | grep -v '^</s>' | ../bin/wordsub.pl -s ${SEED} | gzip > $@
-
-
 ### SCODE ###
+
 # trial.word.wordsubs.scode
 %.scode:
 	../bin/task13.py -f run_scode -i $* -r "*"  #> $@ 2> $@.err
 
-
-%.kmeans.gz:
-	zcat $< | perl -ne 'print if s/^0://' 
-
-WSC_OPTIONS=-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v -a
-wordsub.%.scode.gz: wordsub.%.pairs.gz 
-	zcat $< | scode ${WSC_OPTIONS} | gzip > $@
-
-# wordsub -> scode -> kmeans : needs mapping 
+# wordsub -> scode -> kmeans ->  mapping
 trial.word.%.scode.ans: trial/word/ans/%.scode.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
 	../bin/calc_clust.py $< trial/word/scode/$*.scode.gz \
 	trial/word/wordsubs/$*.pairs.gz 1 ${WORDSUB} | ../bin/evaluate.py \
 	-g trial/word/gold/$*.gold -m 1 > eval/4/$*.ans
+
+### EXPERIMENTS ###
+
+# trial.exp4
+trial.exp%.evaluation: eval/
+	-mkdir eval/$*/
+	-rm -rf eval/$*/*
+	for fname in $(shell find trial/word/ans/ -name "*.ans"); do \
+		ff=$$(echo $${fname}| sed 's/\//./g' | sed 's/ans.//'); \
+		make $${ff}; \
+	done
 
 ### EVALUATIONS ###
 
@@ -207,6 +167,7 @@ ungraded.%.gold:
 	for i in $*/word/gold/ $*/pos/gold/; do \
 		../bin/ung_gold.py $$i; \
 	done
+
 
 EARG=--no-remapping
 %.key: baselines/
@@ -220,7 +181,7 @@ EARG=--no-remapping
 	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} ${BASELINE}$@  all > baselines/$*.uns.vm.eval
 	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} ${BASELINE}$@ all > baselines/$*.uns.fs.eval
 	tail -n 2 baselines/$*.*.eval > baselines/$*.scores
-	rm -rf baselines/*.eval
+	#rm -rf baselines/*.eval
 
 
 %.ans:
@@ -236,6 +197,9 @@ EARG=--no-remapping
 	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} eval/$@ all > eval/$*.uns.fs.eval
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
 	rm -rf eval/*.eval
+
+
+# CLEANING
 
 %.gz.clean:
 	rm -rf $*.gz $*.word.gz $*.id.gz $*.pos.gz $*.ngram.gz $*.gold.gz

@@ -8,11 +8,14 @@ __author__ = "Osman Baskaya"
 # ../bin/eval.py trial/word/ans 3 5
 
 
-from utils import get_uniq_field
+from utils import get_uniq_field, ColorLogger
 import glob
 import os
 import sys
 from itertools import product
+
+
+logger = ColorLogger('debug')
 
 
 #gold_dir = 'trial/word/ungraded_gold/'
@@ -32,27 +35,29 @@ def merge_ans_files(ans_dir, ids):
     for p in ids:
         parameters.append(get_uniq_field(ans_dir, p))
 
+    print parameters
+    exit()
+
     counter = 0 
     for t in product(*parameters):
         pattern = pattern.format(*t)
         files = glob.glob(ans_dir + '/' + pattern)
+        files.sort()
         nlines = []
         for filename in files:
             f = open(filename)
             fn = '.'.join(os.path.basename(filename).split('.')[:2])
             goldfile = os.path.join(goldpath, fn + '.gold')
-            print >> sys.stderr, fn, goldfile
+            logger.debug("{}, {}".format(fn, goldfile))
             glines = open(goldfile).readlines()
             for i, line in enumerate(f.readlines()):
                 gold_line = glines[i].split()[:2]
                 nlines.append(' '.join(gold_line) + ' ' + line)
+
         new = open('eval/'+bpath.replace('/', '.')+ '.'+ '.'.join(t) + '.ans','w')
         counter += 1
         new.write(''.join(nlines))
         new.close()
-
-
-
 
 
 

@@ -6,7 +6,7 @@ __author__ = "Osman Baskaya"
 import sys
 import os
 from optparse import OptionParser
-from utils import get_files, get_uniq_field#, read2sparse
+from utils import get_files, get_uniq_field, get_trial_k, ColorLogger
 #from scipy.sparse.linalg import svds
 #from cluster_analysis import calc_perp_from_arr
 # CONSTANTS
@@ -15,6 +15,7 @@ import gzip
 import glob
 
 
+logger = ColorLogger('debug')
 
 CWD = os.getcwd()
 
@@ -153,39 +154,47 @@ def _wkmeans(files, input_dir, head_com='', k=None):
 
 
     dataset, app_type = input_dir.split('/')[:2]
-    path = os.path.join(dataset, app_type, 'ans') + '/'
+    outpath = os.path.join(dataset, app_type, 'ans') + '/'
+    files.sort()
 
     if k is None:
         k = [5] * len(files)
     elif isinstance(k, int):
         k = [k] * len(files)
+    
+    #print >> sys.stderr, "\tDEBUG: k =", k
+    #print >> sys.stderr, "\tDEBUG: output path =", outpath
+
     for i, fulln in enumerate(files):
         fn = fulln.replace(input_dir, '') # weed out the filename
         fn = fn.replace('.gz', '')
 
         #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v'
         if head_com != '':
-            command = head_com + ' ../bin/wkmeans -k {} -r 5 -s {} -v > {} '
-            command = command.format(fulln, k[i], SEED, path + fn + '.ans')
+            #command = head_com + ' ../bin/wkmeans -k {} -r 5 -s {} -v > {} '
+            command = head_com + ' ../bin/wkmeans -k {} -r 5 -s {} > {} '
+            command = command.format(fulln, k[i], SEED, outpath + fn + '.ans')
         else:
-            command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
-            command = command.format(fulln, k[i], SEED, path + fn + '.ans')
+            command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} > {}'
+            #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
+            command = command.format(fulln, k[i], SEED, outpath + fn + '.ans')
         
-        
-        
-        print >> sys.stderr, fn
+        logger.debug("{}, {}".format(fn, k[i]))
         os.system(command)
-        
     
 def wkmeans():
 
-    """ make trial.word.spectral.wkmeans """
+    """ make trial.word.raw_spect.wkmeans """
 
-    
+
     input_dir = opts.inpath.replace('.', '/') 
+    logger.debug("input_dir: %s" % input_dir)
     
     # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
     dataset, app_type, data = opts.inpath.split('.')
+    
+    k = get_trial_k('trial.k.gz')
+
 
     if 'spect' in input_dir:
         clusters = get_uniq_field(input_dir, ind=-1)
@@ -194,7 +203,7 @@ def wkmeans():
         for d, c in product(distances, clusters):
             pattern = input_dir + "/*" + d + "*" + c
             files = glob.glob(pattern)
-            k = int(c.replace('c', ''))
+            #k = int(c.replace('c', ''))
             _wkmeans(files, input_dir, k=k)
 
     elif 'raw' in input_dir:
@@ -204,12 +213,12 @@ def wkmeans():
             #files = get_files(input_dir, "*" + str(d))
             pattern = input_dir + "*" + str(d)
             files = glob.glob(pattern)
-            _wkmeans(files, input_dir)
+            _wkmeans(files, input_dir, k=k)
 
     elif 'scode' in input_dir:
         head_com = "zcat {} | perl -ne 'print if s/^1://' | cut -f3- | "
         files = [input_dir + '/' + f for f in os.listdir(input_dir)]
-        _wkmeans(files, input_dir + '/', head_com=head_com)
+        _wkmeans(files, input_dir + '/', head_com=head_com, k=k)
 
 
 
@@ -222,7 +231,6 @@ def wordsub():
     """ Call Example: make trial.word.subs.wordsub
 
     """
-
     input_dir = opts.inpath.replace('.', '/') 
     # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
     dataset, app_type, data = opts.inpath.split('.')

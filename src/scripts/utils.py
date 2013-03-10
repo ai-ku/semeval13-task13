@@ -8,6 +8,8 @@ import os
 import shutil
 import numpy as np
 from scipy.sparse import coo_matrix
+import gzip
+import sys
 
 # ask.v.knn.3.spectral.c2
 # argument.n.knn.2
@@ -19,6 +21,12 @@ def get_uniq_field(path, ind=-1):
 
     files = os.listdir(path)
     return set([f.split('.')[ind] for f in files])
+
+def get_trial_k(k_file):
+
+    k_lines = gzip.open(k_file).readlines()
+    return [int(line.split()[1]) for line in k_lines]
+
 
 def refresh_temp():
     temp = 'temp'
@@ -107,6 +115,37 @@ def check_dest(dest):
     if os.path.isdir(dest):
         shutil.move(dest, n)
     os.mkdir(dest)
+
+
+# for debug messages etc.
+class ColorLogger(object):
+    
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    
+    def __init__(self, mode=None):
+        if mode is None:
+            self.disable()
+        self.mode = mode.lower()
+
+
+    def disable(self):
+        self.HEADER = ''
+        self.OKBLUE = ''
+        self.OKGREEN = ''
+        self.WARNING = ''
+        self.FAIL = ''
+        self.ENDC = ''
+
+    def debug(self, message):
+        if self.mode == "debug":
+            print >> sys.stderr, self.FAIL, "DEBUG:", message, self.ENDC
+        else:
+            print >> sys.stderr, message
 
 def main():
     pass
