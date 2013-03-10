@@ -184,7 +184,11 @@ def _wkmeans(files, input_dir, head_com='', k=None):
     
 def wkmeans():
 
-    """ make trial.word.raw_spect.wkmeans """
+    """ 
+        make trial.word.raw_spect.wkmeans 
+        make trial.word.raw.wkmeans 
+        make trial.word.scode.wkmeans 
+    """
 
 
     input_dir = opts.inpath.replace('.', '/') 

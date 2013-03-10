@@ -11,48 +11,47 @@ http://www.cs.york.ac.uk/semeval-2013/task13/.
 
 TASK OVERVIEW:
 
-Word Sense Disambiguation (WSD) aims to identify which sense of a word is
-present in a context.  Certain contexts may evoke more that one sense to a
-reader; that is, multiple senses can be applicable to a given word usage, with
-different degrees of applicability.  For example, consider the usages of "paper"
-in the sentences
+Previous SemEval tasks on word senses have largely assumed that each usage of a
+word is best labeled by a single sense.  In contrast, Task 13 proposes that
+usages should be labeled by all senses that apply, with weights indicating the
+degree of applicability.  This multi-sense labeling effectively captures both
+cases where related senses from a fine-grain sense inventory apply and where
+contextual ambiguity enables alternate interpretations.  We illustrate this with
+three example sentences:
 
- (1) "The student submitted her paper by email"
- (2) "The student loaded paper into the printer"
- (3) "The student handed her paper to the teacher at the beginning of class"
+ 1. The student loaded paper into the printer
+ 2. The student submitted her paper by email.
+ 3. The student handed her paper to the teacher at the beginning of class
 
-The first sentence evokes the WordNet sense for an essay, while the second sense
-evokes the sense for a physical material.  In contrast the third sentence could
-evoke both the WordNet senses since the student is submitting an essay but is
-also referring to a specific physical object.  Task 13 is designed specifically
-to detect such usages and label them according with which senses might apply.
+according to the first two senses of paper in WordNet 3.1:
 
-The task is based on the Graded WSD problem (Erk et al, 2009), where usages of a
-word are labeled with one or more senses, each of which is rated for how
-applicable it is.  We refer to these as graded word sense (GWS) annotations.
+ 1) paper - a material made of cellulose pulp derived mainly from wood or rags
+    or certain grasses
+ 2) paper - an essay, especially one written as an assignment
 
-Labeling word usages with multiple senses (which may be additionally weighted)
-greatly increases the amount of labeled data necessary for training a supervised
-WSD system.  Therefore, this task proposes using Word Sense Induction (WSI) as a
-solution to the training data bottleneck.  WSI automatically learns the senses
-of a word and the features for those senses based on its usages, which removes
-the need for explicitly labeled training data.
-
-Three types of evaluations are used in this task:
-
-1) A series of unsupervised soft-clustering evaluations on the GWS annotations
-   of the induced and gold standard senses
-
-2) A series of supervised Graded WSD evaluations where the induced sense
-   annotations are first transformed into the gold standard sense inventory and
-   then the transformed annotations are directly compared the gold standard
-   annotations
-
-3) An extrinsic evaluation based on lexical substitution where systems are asked
-   use their induced sense inventory to rank paraphrases of a word in context
+The first sentence refers to the material sense of paper, while the second
+sentence refers to the essay sense of paper.  In contrast, both senses are
+possible interpretations in the third sentence, though with different degrees;
+here, the usage evokes separate properties of the concept of its form (a
+cellulose material) and purpose (an assignment), which are themselves distinct
+senses of paper.  Similar multi-label conditions may also be constructed for
+word uses where a reader perceives multiple, unrelated interpretations due to
+contextual ambiguity.  While most previous work on WSD makes a best guess as to
+which interpretation is correct, Task 13 opts to make explicit the ambiguity
+explicit in the multi-sense labeling.
 
 
-DATA PACKAGE SUMMARY:  (v1.1)
+TASK:
+
+Task 13 evaluates Word Sense Induction (WSI) and Unsupervised WSD systems in two
+settings (1) a WSD task for Unsupervised WSD and WSI systems, (2) a clustering
+comparison setting that evaluates the similarity of the sense inventories for
+WSI systems.  Participants are presented examples contexts of each word and
+asked to label each usage with as many senses as they think are applicable,
+along with numeric weights denoting the relative levels of applicability.
+
+
+DATA PACKAGE SUMMARY:  (v1.2)
 
 This download package contains the necessary data for testing and evaluating
 Graded WSD systems that use induced senses.
@@ -65,9 +64,6 @@ evaluation/ - programs for running different evaluations
 evaluation/unsupervised - programs for running the unsupervised evaluations
 
 evaluation/supervised - programs for running the supervised evaluations
-
-evaluation/lexsub - (currently empty, but will contain) a program for running
-                    the lexical substitution evaluation
 
 evaluation/keys/gold-standard - two gold standard keys for the trial data set.
                                 See the trial data section below for more information
@@ -135,7 +131,7 @@ applicability ratings may be any positive value.  All ratings will be normalized
 to sum to 1.
 
 
-The Trial Data 1.1 release contains four supervised and two unsupervised
+The Trial Data 1.2 release contains four supervised and two unsupervised
 evaluations.  The unsupervised evaluations capture two diverging aspects of
 clusterings:
 
@@ -208,7 +204,7 @@ disagreements by a single annotator over the applicability of a sense.
 
 BASELINES:
 
-Several baselines have been included in 1.1 release:
+Several baselines have been included in 1.2 release:
 
 1) mfs.key - The most frequent sense baseline, where each instance is assigned a
    single sense according to which of its senses is most frequent in the gold
@@ -247,7 +243,7 @@ groups: semeval-2013-task-13@groups.google.com
 For specific questions, please contact the organizers
 
 David Jurgens - jurgens@cs.ucla.edu 
-Ioannis P. Klapaftis - ioannis.klapaftis@hotmail.com
+Ioannis P. Klapaftis - klapaftis@outlook.com
 
 
 VERSIONS:
@@ -261,6 +257,10 @@ VERSIONS:
     - Updated with new task number and Google Group
     - Added new baseline key for trial data
     - Updated task and trial data description 
+
+1.2 - Corrected the output for the jaccard-index.jar, weighted-tau.jar and
+      weighted-ndcg.jar to report the per-word error rates and column headers.
+    - Updated task description 
 
 
 REFERENCES:

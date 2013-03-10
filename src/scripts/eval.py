@@ -35,10 +35,7 @@ def merge_ans_files(ans_dir, ids):
     for p in ids:
         parameters.append(get_uniq_field(ans_dir, p))
 
-    print parameters
-    exit()
 
-    counter = 0 
     for t in product(*parameters):
         pattern = pattern.format(*t)
         files = glob.glob(ans_dir + '/' + pattern)
@@ -55,17 +52,10 @@ def merge_ans_files(ans_dir, ids):
                 nlines.append(' '.join(gold_line) + ' ' + line)
 
         new = open('eval/'+bpath.replace('/', '.')+ '.'+ '.'.join(t) + '.ans','w')
-        counter += 1
         new.write(''.join(nlines))
         new.close()
 
-
-
-
 def main():
-    #spect_score_eval()
-    #score_eval()
-
     ans_dir = sys.argv[1]
     ids = sys.argv[2:]
     merge_ans_files(ans_dir, ids)

@@ -142,18 +142,21 @@ WORDSUB=12 # Number of random substitutes per word
 %.scode:
 	../bin/task13.py -f run_scode -i $* -r "*"  #> $@ 2> $@.err
 
-# wordsub -> scode -> kmeans ->  mapping
+# wordsub -> scode -> kmeans -> multiclass answers
 trial.word.%.scode.ans: trial/word/ans/%.scode.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
 	../bin/calc_clust.py $< trial/word/scode/$*.scode.gz \
 	trial/word/wordsubs/$*.pairs.gz 1 ${WORDSUB} | ../bin/evaluate.py \
-	-g trial/word/gold/$*.gold -m 1 > eval/4/$*.ans
+	-g trial/word/gold/$*.gold -m 1 > eval/$*.ans
 
 ### EXPERIMENTS ###
 
-# trial.exp4
-trial.exp%.evaluation: eval/
-	-mkdir eval/$*/
-	-rm -rf eval/$*/*
+# trial.exp3 scode multi
+trial.exp3.evaluation: eval/3/
+	#TODO: calc part
+	# ....
+	# evaluation part
+	-mkdir eval/3/
+	-rm -rf eval/3/*
 	for fname in $(shell find trial/word/ans/ -name "*.ans"); do \
 		ff=$$(echo $${fname}| sed 's/\//./g' | sed 's/ans.//'); \
 		make $${ff}; \
@@ -196,7 +199,7 @@ EARG=--no-remapping
 	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} eval/$@  all > eval/$*.uns.vm.eval
 	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} eval/$@ all > eval/$*.uns.fs.eval
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
-	rm -rf eval/*.eval
+	#rm -rf eval/*.eval
 
 
 # CLEANING
