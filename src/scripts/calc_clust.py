@@ -4,9 +4,9 @@
 __author__ = "Osman Baskaya"
 
 """ 
-wordsub -> scode -> wkmeans
+wordsub -> scode -> wkmeans sonrasinda
 
-Y'ler tamamiyle unique olmadigindan oturu random word subs kadar gruplara ayrilmiyor
+Y'ler tamamiyle unique olmadigindan oturu  wordsubs kadar gruplara ayrilmiyor
 kmeans sonuclari. O yuzden bir mapping gerekiyor.
 
 """
@@ -28,7 +28,7 @@ cluster_ans = sys.argv[1] # answer key
 scode_file = sys.argv[2]
 wordsub_file = sys.argv[3]
 field = int(sys.argv[4])  # 0 or 1 (0 for X, 1 for Y)
-nsub = int(sys.argv[5]) # number of substition used
+nsub = int(sys.argv[5]) # number of wordsub used
 
 if field == 0 or field == 1:
     regex = r'%d:.*' % field
@@ -39,7 +39,7 @@ sc_lines = gzip.open(scode_file).read()
 sc = re.findall(regex, sc_lines)
 
 clabels = map(str.strip, open(cluster_ans).readlines()) # cluster labels
-sc_subs = [line.split()[0][2:] for line in sc]
+sc_subs = [line.split()[0][2:] for line in sc] # target words or wordsubs depends on regex
 
 d = dict(zip(sc_subs, clabels))
 assert len(sc_subs) == len(clabels)

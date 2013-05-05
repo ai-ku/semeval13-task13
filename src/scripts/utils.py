@@ -22,10 +22,13 @@ def get_uniq_field(path, ind=-1):
     files = os.listdir(path)
     return set([f.split('.')[ind] for f in files])
 
-def get_trial_k(k_file):
+def get_gold_k(k_file):
 
     k_lines = gzip.open(k_file).readlines()
-    return [int(line.split()[1]) for line in k_lines]
+    #return [int(line.split()[1]) for line in k_lines]
+    inst = [line.split()[0] for line in k_lines]
+    k = [int(line.split()[1]) for line in k_lines]
+    return dict(zip(inst, k))
 
 
 def refresh_temp():

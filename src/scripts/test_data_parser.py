@@ -53,13 +53,13 @@ def parse():
             inst_id = instance['id']
             lemma = instance['lemma']
             pos = instance['partOfSpeech']
-            #target = instance['token']
+            target = instance['token']
             tokenEnd = int(instance['tokenEnd'])
             tokenStart = int(instance['tokenStart'])
             sentences = instance.next
             sentences = sentences[:tokenStart] + TARGET + sentences[tokenEnd:]
             window = ' '.join(get_window(sentences))
-            print inst_id, lemma + '.' + pos, pos, "\t", window
+            print inst_id, lemma + '.' + pos, pos, target, "\t", window
 
 
 def main():

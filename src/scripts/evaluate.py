@@ -5,7 +5,7 @@ __author__ = "Osman Baskaya"
 
 
 import sys
-import os
+#import os
 
 # arguments
 

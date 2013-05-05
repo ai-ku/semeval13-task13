@@ -9,14 +9,14 @@ from collections import defaultdict
 
 fastsub_file = sys.argv[1]
 DATASET = fastsub_file.split('.')[0] 
-OUT_PATH = DATASET + '/word/subs/'
+OUT_PATH = DATASET + '/%s/subs/' % sys.argv[3]
 targetword_file = sys.argv[2]
 wordfile = DATASET + '.word.gz'
 
 
 
 def pre_wordsub():
-    """make trial.word.subs.gz """   
+    """call_exp: trial.word.prewordsub.gz """   
 
     wlines = gzip.open(wordfile).readlines()
     fastd = defaultdict(list)

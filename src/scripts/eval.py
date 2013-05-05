@@ -15,12 +15,10 @@ import sys
 from itertools import product
 
 
-logger = ColorLogger('debug')
-
-
 #gold_dir = 'trial/word/ungraded_gold/'
 
 
+logger = ColorLogger('debug')
 
 def merge_ans_files(ans_dir, ids):
 
@@ -35,10 +33,9 @@ def merge_ans_files(ans_dir, ids):
     for p in ids:
         parameters.append(get_uniq_field(ans_dir, p))
 
-
     for t in product(*parameters):
-        pattern = pattern.format(*t)
-        files = glob.glob(ans_dir + '/' + pattern)
+        newpat = pattern.format(*t)
+        files = glob.glob(ans_dir + '/' + newpat)
         files.sort()
         nlines = []
         for filename in files:
@@ -50,10 +47,12 @@ def merge_ans_files(ans_dir, ids):
             for i, line in enumerate(f.readlines()):
                 gold_line = glines[i].split()[:2]
                 nlines.append(' '.join(gold_line) + ' ' + line)
-
         new = open('eval/'+bpath.replace('/', '.')+ '.'+ '.'.join(t) + '.ans','w')
         new.write(''.join(nlines))
         new.close()
+
+
+
 
 def main():
     ans_dir = sys.argv[1]

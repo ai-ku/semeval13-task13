@@ -7,17 +7,19 @@ SRILM_PATH=/opt/srilm/bin/i686-m64
 export PATH := ../../bin:.:${SRILM_PATH}:${PATH} # Binaries in the bin directory
 SEED=1  # Random seed
 NCPU=7 # Number of threads/processes to use for parallel computations
-MATLAB_PATH=/mnt/opt/matlab/linux64/R2011a/bin/matlab -nojvm -nodisplay
+#MATLAB_PATH=/mnt/opt/matlab/linux64/R2011a/bin/matlab -nojvm -nodisplay
+MATLAB_PATH=/usr/local/MATLAB/R2012a/bin/matlab -nojvm -nodisplay
 BIN=../bin/
 DATA=../data/tokenized/
 ### 1.3 INPUT files:
 TRAIN=${DATA}train.ukwac.tok.gz # ukWaC Corpus wc=88214600 2247153469 12385653002
 TEST=${DATA}test.ukwac.tok.gz  # ukWaC Test Corpus wc= 39203 998193 5509360
 EVAL=../trial_data/evaluation/
-GOLD=../trial_data/evaluation/keys/gold-standard/trial.gold-standard.key
+GOLD=../trial_data/evaluation/keys/gold-standard/trial.gold-standard.median.key
+GOLD_TEST=../test_data/keys/gold/all.key
 BASELINE=../trial_data/evaluation/keys/baselines/
 
-### 2.2 SRILM options:
+### 2.2 SRILM options:/matl
 LM_NGRAM=4# n-gram order
 LM_VOCAB=100 # words seen less than this in GETTRAIN will be replaced with <unk>
 LM_MTYPE=i686-m64 # architecture for compiling srilm
@@ -30,8 +32,14 @@ ukwac.tokenize: ## time=1h30m, wc=88214600 2247153469 12385653002
 	tokenize.py
 
 trial.all.gz: trial.gz trial.ngram.gz trial.gold.gz trial.pos.gz trial.word.gz trial.id.gz
-test.all.gz: test.gz test.ngram.gz test.pos.gz test.word.gz test.id.gz 
-	
+#test.all.gz: test.gz test.ngram.gz test.gold.gz test.pos.gz test.word.gz test.id.gz \
+			 #test.target.gz
+test.all.gz: test.ngram.gz test.gold.gz test.pos.gz test.word.gz test.id.gz \
+			 test.target.gz
+
+test.prep: test.gz
+	../bin/test-remove-inst.py
+
 %.tok.gz: ../%_data
 	#tokenize method trial.tok.gz test.tok.gz
 	# method tokenize diye duzeltmek gerekiyor.
@@ -50,9 +58,15 @@ trial.gold.gz: ../trial_data/evaluation/keys/gold-standard/trial.gold-standard.k
 	#zcat $< | cut -f3 | gzip > $@
 	cat $< | gzip > $@
 
+test.gold.gz: ${GOLD_TEST}
+	cat $< | gzip > $@
+
 # number of cluster, k
 trial.k.gz: ../trial_data
 	cat ${BASELINE}all-senses.key | awk '{if (NR % 50 == 1) print $$1"\t"NF-2;}' | gzip  > $@
+
+test.k.gz: ../test_data/keys/gold/
+
 
 %.pos.gz: %.gz
 	zcat $< | perl -lane 'print $$F[2]' | gzip > $@
@@ -99,8 +113,10 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 %.localize: #%.sub.gz %.word.gz
 	-mkdir -p $*/word/raw/; 
 	-mkdir -p $*/word/gold/
+	-mkdir -p $*/word/subs/
 	-mkdir -p $*/pos/raw/
 	-mkdir -p $*/pos/gold/
+	-mkdir -p $*/pos/subs/
 	../bin/localize.py $*
 
 %.unk: %.vocab.gz %.tok.gz # Calculates unknown word ratio
@@ -128,39 +144,63 @@ trial.knn.gz: trial.sub.gz
 
 ### WORDSUB ###
 WORDSUB=12 # Number of random substitutes per word
-
+TYPE=pos
 %.prewordsub.gz: #%.sub.gz %.target.gz
-	#-mkdir $*/word/subs/
+	#TODO: Gereksiz. Localize fonksiyonu hallediyor bu isleri.
+	-mkdir $*/${TYPE}/subs/
 	# call: trial.prewordsub.gz
-	../bin/pre_wordsub.py $*.sub.gz $*.target.gz  | gzip > $@
+	../bin/pre_wordsub.py $*.sub.gz $*.target.gz ${TYPE} | gzip > $@
 %.wordsub:
+	#call: trial.word.subs.wordsub
 	../bin/task13.py -f run_wordsub -i $* -r "*" --nsubs=${WORDSUB} 2> $@.err
 
 ### SCODE ###
 
 # trial.word.wordsubs.scode
 %.scode:
-	../bin/task13.py -f run_scode -i $* -r "*"  #> $@ 2> $@.err
+	../bin/task13.py -f run_scode -i $* -r "*"  #2> $@.err #> $@ 
 
 # wordsub -> scode -> kmeans -> multiclass answers
 trial.word.%.scode.ans: trial/word/ans/%.scode.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
 	../bin/calc_clust.py $< trial/word/scode/$*.scode.gz \
-	trial/word/wordsubs/$*.pairs.gz 1 ${WORDSUB} | ../bin/evaluate.py \
+	trial/word/wordsubs/$*.pairs.gz ${WORDSUB} | ../bin/evaluate.py \
+	-g trial/word/gold/$*.gold -m 1 > eval/$*.ans
+
+# X+Y
+# wordsub -> scode -> kmeans -> multiclass answers
+trial.word.%.scode.xy.ans: trial/word/ans/%.scode.xy.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
+	../bin/x+y2eval.py $< trial/word/scode_xy/$*.scode.xy.gz \
+	trial/word/wordsubs/$*.pairs.gz ${WORDSUB} | ../bin/evaluate.py \
 	-g trial/word/gold/$*.gold -m 1 > eval/$*.ans
 
 ### EXPERIMENTS ###
 
 # trial.exp3 scode multi
-trial.exp3.evaluation: eval/3/
+trial.scode.exp.%.evaluation: eval/3/
 	#TODO: calc part
 	# ....
 	# evaluation part
-	-mkdir eval/3/
-	-rm -rf eval/3/*
+	-mkdir eval/$*/
+	-rm -rfi eval/$*/*
 	for fname in $(shell find trial/word/ans/ -name "*.ans"); do \
 		ff=$$(echo $${fname}| sed 's/\//./g' | sed 's/ans.//'); \
 		make $${ff}; \
 	done
+
+trial.xy: trial/word/scode
+	-mkdir $<_xy
+	-rm -rf $<_xy/*
+	for fname in $(shell find trial/word/raw/ -type f -printf "%f\n"); do \
+		zcat $</$${fname}.scode.gz | ../bin/x+y2kmeans.py \
+		-p trial/word/wordsubs/$${fname}.pairs.gz \
+	     > trial/word/scode_xy/$${fname}.scode.xy.gz; \
+	done
+		#ff=$$(echo $${fname} | perl -pe 's|trial/word/scode/||g'); \
+
+
+test.gaps:
+	${MATLAB_PATH} < ../src/gap-statistics-matlab/calcClusterNum.m  > $@ 2> $@.err
+	
 
 ### EVALUATIONS ###
 
@@ -172,12 +212,27 @@ ungraded.%.gold:
 	done
 
 
+ai.ans:
+	@for fname in $(shell find eval/ -maxdepth 1 -name "*.ans" ); do \
+		echo $${fname}; \
+		../bin/my-eval.py -g ${GOLD} -a $${fname}; \
+	done
+
+ai.%.ans:
+	../bin/my-eval.py -g ${GOLD} -a eval/$*.ans
+
+ai.baselines:
+	@for fname in $(shell find ../trial_data/evaluation/keys/baselines/ -maxdepth 1 -name "*.key" ); do \
+		echo $${fname}; \
+		../bin/my-eval.py -g ${GOLD} -a $${fname}; \
+		echo ""; \
+	done
+
 EARG=--no-remapping
-%.key: baselines/
-	java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} ${BASELINE}$@ > baselines/$*.sup.gkgamma.eval
+trial.%.key: baselines/
 	java -jar ${EVAL}supervised/jaccard-index.jar ${EARG} ${GOLD} ${BASELINE}$@ > baselines/$*.sup.ji.eval
-	java -jar ${EVAL}supervised/weighted-ndcg.jar ${EARG} ${GOLD} ${BASELINE}$@ >  baselines/$*.sup.wndcg.eval
 	java -jar ${EVAL}supervised/weighted-tau.jar ${EARG} ${GOLD} ${BASELINE}$@ > baselines/$*.sup.wtau.eval
+	java -jar ${EVAL}supervised/weighted-ndcg.jar ${EARG} ${GOLD} ${BASELINE}$@ >  baselines/$*.sup.wndcg.eval
 	#unsupervised
 	#java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fbcubed.eval
 	#java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fnmi.eval
@@ -189,29 +244,25 @@ EARG=--no-remapping
 
 %.ans:
 	#supervised:
-	java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} eval/$@ > eval/$*.sup.gkgamma.eval
+	#java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} eval/$@ > eval/$*.sup.gkgamma.eval
 	java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD}  eval/$@ > eval/$*.sup.ji.eval
-	java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD}  eval/$@ >  eval/$*.sup.wndcg.eval
 	java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD}  eval/$@ > eval/$*.sup.wtau.eval
+	java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD}  eval/$@ >  eval/$*.sup.wndcg.eval
 	#unsupervised
 	#java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} eval/$@ > eval/$*.uns.fbcubed.eval
 	#java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} eval/$@ > eval/$*.uns.fnmi.eval
 	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} eval/$@  all > eval/$*.uns.vm.eval
 	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} eval/$@ all > eval/$*.uns.fs.eval
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
-	#rm -rf eval/*.eval
+	rm -rf eval/*.eval
 
 
 # CLEANING
 
 %.gz.clean:
-	rm -rf $*.gz $*.word.gz $*.id.gz $*.pos.gz $*.ngram.gz $*.gold.gz
+	rm -rf $*.gz $*.word.gz $*.id.gz $*.pos.gz $*.ngram.gz $*.gold.gz $*.tok.gz $*.target.gz
 
 %.clean: %/
-	rm -rf $*/pos/gold/*
-	rm -rf $*/pos/raw/*
-	rm -rf $*/pos/ungraded_gold/*
-	rm -rf $*/word/gold/*
-	rm -rf $*/word/raw/*
-	rm -rf $*/word/ungraded_gold/*
+	rm -rf $*/*
+
 

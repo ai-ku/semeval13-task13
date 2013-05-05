@@ -58,8 +58,8 @@ def parse():
 
 
 def main():
-    parse()
-    #tokenize()
+    #parse()
+    tokenize()
 
 if __name__ == '__main__':
     main()

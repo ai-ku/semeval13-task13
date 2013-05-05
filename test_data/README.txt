@@ -2,7 +2,7 @@
 
 SemEval-2013 Task 13: Word Sense Induction for Graded and Non-Graded Senses
 
-David A. Jurgens and Ioannis P. Klapaftis.  February 27, 2013
+David A. Jurgens and Ioannis P. Klapaftis.  March 21, 2013
 
 This README.txt file describes the test data for SemEval-2013 Task 13. For
 information about SemEval-2013 Task 13, see the task website
@@ -123,30 +123,144 @@ normalized so the maximum value is 1, indicating completely applicable.  Senses
 without ratings are assumed to have maximum applicability.
 
 
-SUBMISSION:
+TEST DATA:
 
-1. Teams will upload each of their submissions to the FTP server at
-   semeval2013.ku.edu.tr .  Log in information should be provided when
-   registering the team on the SemEval website www.cs.york.ac.uk/semeval-2013 .
+The Task 13 was based on a sample of instances from the Open American National
+Corpus (http://www.americannationalcorpus.org/OANC/index.html). Target lemmas
+were first identified and then instances were sampled from both the written and
+spoken portions of the corpus. Due to the frequency with which the lemmas were
+used, obtaining a fully balanced corpus between spoken and written was not
+possible; however, all lemmas have at least four instances from the spoken
+format.
 
-2. Each of a team's submissions should be contained in a different archive,
-   e.g., a .zip or .tar.gz.  Please note that we ask teams to submit at most
-   three submissions.
+The dataset initially distributed with the SemEval test data contained a small
+minority of instances that were removed due to being invalid examples of the
+lemma. A manual analysis of all instances revealed instances that were invalid
+due being the wrong part of speech, being a part of collocation, or not having
+any applicable WordNet 3.1 sense. These instances were removed from the data
+distribution after the task, but the instance numbering remains the same, which
+results in occasional gaps in the numbers.
 
-3. Submissions should be named using the format "task13-TEAM-APPROACH.zip".
-   TEAM is the name of your team, which is used only for distinguishing your
-   submissions from those of other teams.  APPROACH is a short name that
-   distinguishes between your team's submissions, if you choose to submit
-   multiple solutions.  
+The Task 13 test set contains annotations for 4664 instances. Of those, 517 were
+annotated with two senses (11%) and 25 were annotated with three sense
+(0.5%). This low percentage of multiple-annotations is in stark contrast with
+the trial data from the GWS dataset of Erk et al. (2009), which featured
+multiple annotations on every instance. A re-analysis of their dataset by
+trained lexicographers revealed that annotators were often mistaken regarding
+the specific application of senses and were therefore more likely to rate in
+applicable senses as applicable. The Task 13 test data adopted a conservative
+sense annotation approach that involved making sense applicability judgments
+based on all available information and examples in WordNet 3.1, such as sentence
+frames, coordinate terms, antonyms, etc., which were not available to the
+annotators for the trial data.
 
-4. Teams should include both a .key file in the SemEval WSD format noted above
-   (http://www.senseval.org/senseval3/scoring) and a .txt file with a short
-   system description.  The description should include (1) the general approach,
-   (2) whether the system uses Unsupervised WSD or WSI (3) the types of features
-   for sense disambiguation, and (4) in the case of WSI systems, which features,
-   methods, and corpora were used to induce the senses.  This description
-   greatly helps us in summarizing the participants in the task description
-   paper.
+
+EVALUATION:
+
+Task 13 uses two types of evaluation metrics:
+
+  (1) a traditional WSD evaluation involving direct comparison between WordNet
+      3.1 sense labels and
+
+  (2) cluster-based evaluations for comparing induced sense inventories to the
+      WordNet 3.1 inventories
+
+All code and scripts for performing the evaluation are released open source at
+https://code.google.com/p/cluster-comparison-tools/
+
+
+The WSD evaluation uses three different scoring metrics:
+
+ - the Jaccard Index, which measures the agreement in which sense labels are
+   used on an instance
+
+ - positionally-weighted Kendall's tau, which measures the agreement in ranking
+   an instance's sense labels according to their applicability
+
+ - a weighted variant of Normalized Discounted Cumulative Gain, which measures
+   agreement in sense applicability ratings
+
+Each metric has a separate evaluation script.  Because WSI approaches use a
+different sense inventory, the scoring scripts will perform a remapping
+procedure that converts a sense labeling in the induced inventory to one for
+WordNet 3.1.  The process follows previous SemEval tasks and uses 80% of the
+instances to learn the sense-mapping and then tests the agreement on the
+remaining 20%.  This 80/20 test/train process is repeated to provide a score for
+the entire data set. 
+
+Unsupervised WSD approaches that directly use WordNet 3.1 should provide the
+"--no-remapping" flag to the evaluation scripts to indicate that such an
+evaluation is not necessary.
+
+
+Cluster-based evaluations use two metrics:
+
+ - Fuzzy Normalized Mutual Information, which measures agreement between the two
+   sense clusters at the sense level
+ 
+ - Fuzzy B-Cubed, which measures agreement at the instance level.
+
+Cluster-based evaluation are designed to measure the agreement between the
+induced sense inventory and the WordNet 3.1 inventory and therefore the measures
+are only officially reported for WSI systems.
+
+
+BASELINES:
+
+Task 13 includes six total baselines: (1) three solutions that directly use the
+WordNet 3.1 sense inventory and (2) three solutions that use induced senses.
+
+ - Most Frequent Sense (mfs.wn.key) labels each instance with a single sense, using the sense
+   that is most frequently seen for that word in the text (regardless of what
+   applicability rating it was given)
+
+ - All Senses, Equally Weighted (all-senses.wn.key) labels each instance with
+   all senses
+
+ - All Senses, Average Weighted (all-senses.avg-rating.wn.key) labels each
+   instance with all senses, rating each sense with its average applicability
+   rating from the gold standard labeling
+
+ - 1 of 2 random senses (random.2-senses.induced.key) labels each instance one
+   of two random induced senses, which are then mapped to WordNet 3.1 senses
+   using the Task's sense mapping procedure.
+
+ - 1 of 3 random senses (random.3-senses.induced.key) labels each instance one
+   of three random induced senses, which are then mapped to WordNet 3.1 senses
+   using the Task's sense mapping procedure.
+
+ - 1 of n random senses (random.n-senses.induced.key) labels each instance one
+   of n random induced senses, where n is the true number of senses for that
+   word. These induced senses are then mapped to WordNet 3.1 senses using the
+   Task's sense mapping procedure.
+
+When evaluating these and other baselines, sense keys that are already use the
+WordNet 3.1 sense inventory (denoted above with ".wn." in the file name) should
+use the "--no-remapping" flag with the supervised command line programs.
+
+
+DIRECTORY LAYOUT AND FILE DESCRIPTIONS:
+
+contexts/ - A directory containing .xml files for each of the target lemmas.
+            Each file contains a set of instances to be annotated.  Note that in
+            the 2.0 release, some instances in the XML files are excluded from
+            the key files (see note above)
+
+keys/gold/ - The directory with gold standard keys
+
+keys/gold/all.key - The sense annotation key with all instances.  This is the
+                    key used for all official SemEval-2013 scoring
+
+keys/gold/{adjectives,nouns,verbs}.key - Three separate keys for each of the
+                                         parts of speech used in Task 13
+
+keys/gold/{spoken,written}.key - Two separate keys for separating whether the
+                                 instances were obtained from spoken or written
+                                 text.
+
+keys/baselines/ - The directory for all official baseline solutions
+
+scoring/ - The directory containing executable .jar files for each evaluation
 
 
 CONTACT:
@@ -163,5 +277,6 @@ Ioannis P. Klapaftis - klapaftis@outlook.com
 VERSIONS:
 
 1.0 - Initial release of test data and README
+2.0 - Release of solutions and baselines
 
 ===============================================================================

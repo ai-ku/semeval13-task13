@@ -6,7 +6,7 @@ __author__ = "Osman Baskaya"
 import sys
 import os
 from optparse import OptionParser
-from utils import get_files, get_uniq_field, get_trial_k, ColorLogger
+from utils import get_files, get_uniq_field, get_gold_k, ColorLogger
 #from scipy.sparse.linalg import svds
 #from cluster_analysis import calc_perp_from_arr
 # CONSTANTS
@@ -155,31 +155,33 @@ def _wkmeans(files, input_dir, head_com='', k=None):
 
     dataset, app_type = input_dir.split('/')[:2]
     outpath = os.path.join(dataset, app_type, 'ans') + '/'
+    if not os.path.exists(outpath):
+        os.makedirs(outpath)
     files.sort()
 
-    if k is None:
-        k = [5] * len(files)
-    elif isinstance(k, int):
-        k = [k] * len(files)
+    #if k is None:
+        #k = [5] * len(files)
+    #elif isinstance(k, int):
+        #k = [k] * len(files)
     
     #print >> sys.stderr, "\tDEBUG: k =", k
     #print >> sys.stderr, "\tDEBUG: output path =", outpath
 
     for i, fulln in enumerate(files):
         fn = fulln.replace(input_dir, '') # weed out the filename
-        fn = fn.replace('.gz', '')
+        fn = fn.replace('.scode.gz', '')
 
         #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v'
         if head_com != '':
             #command = head_com + ' ../bin/wkmeans -k {} -r 5 -s {} -v > {} '
             command = head_com + ' ../bin/wkmeans -k {} -r 5 -s {} > {} '
-            command = command.format(fulln, k[i], SEED, outpath + fn + '.ans')
+            command = command.format(fulln, k[fn], SEED, outpath + fn + '.ans')
         else:
             command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} > {}'
             #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
-            command = command.format(fulln, k[i], SEED, outpath + fn + '.ans')
+            command = command.format(fulln, k[fn], SEED, outpath + fn + '.ans')
         
-        logger.debug("{}, {}".format(fn, k[i]))
+        logger.debug("{}, {}".format(fn, k[fn]))
         os.system(command)
     
 def wkmeans():
@@ -197,7 +199,9 @@ def wkmeans():
     # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
     dataset, app_type, data = opts.inpath.split('.')
     
-    k = get_trial_k('trial.k.gz')
+    #k = get_trial_k('trial.k.gz')
+    k = get_gold_k("{}.{}.k.gz".format(dataset, app_type))
+
 
 
     if 'spect' in input_dir:
@@ -218,11 +222,19 @@ def wkmeans():
             pattern = input_dir + "*" + str(d)
             files = glob.glob(pattern)
             _wkmeans(files, input_dir, k=k)
+    
+    elif 'scode_xy' in input_dir:
+        print "scode_xy"
+        files = [input_dir + '/' + f for f in os.listdir(input_dir)]
+        _wkmeans(files, input_dir + '/', k=k)
 
     elif 'scode' in input_dir:
+        print "scode"
+        #exit()
         head_com = "zcat {} | perl -ne 'print if s/^1://' | cut -f3- | "
         files = [input_dir + '/' + f for f in os.listdir(input_dir)]
         _wkmeans(files, input_dir + '/', head_com=head_com, k=k)
+    
 
 
 
@@ -231,22 +243,23 @@ def run_wkmeans():
 
 
 def wordsub():
-    
-    """ Call Example: make trial.word.subs.wordsub
-
-    """
     input_dir = opts.inpath.replace('.', '/') 
     # dataset: trial/test, approach type: word/pos/global, data: raw/iso/svd
+    logger.debug(opts.inpath)
     dataset, app_type, data = opts.inpath.split('.')
 
     nsubs = int(opts.nsubs)
+
+    directory = dataset + '/' + app_type + '/wordsubs/'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
     seed = SEED
     files = os.listdir(input_dir)
     for fname in files:
         fn = '.'.join(fname.split('.')[:2])
         fulln = os.path.join(input_dir, fname)
-        outfn = dataset + '/' + app_type + '/wordsubs/' + fn + '.pairs.gz'
+        outfn = directory + fn + '.pairs.gz'
         #open(outfn, 'w') # for >> below 
         for i in xrange(nsubs):
             command = """ zcat {} | grep -v '^</s>' | \
@@ -258,6 +271,9 @@ def wordsub():
             os.system(command)
 
 def run_wordsub():
+    
+    """ Call Example: make trial.word.subs.wordsub
+    """
     wordsub()
 
 def scode():
@@ -276,7 +292,7 @@ def scode():
         #awk_com = """awk 'BEGIN {count=1} {print $1 count "\\t" $2; count=count+1}'"""
 
 
-    WSC_OPTIONS = "-r 1 -i 9 -d 25 -z 0.166 -p 50 -u 0.2 -s {} -v -a".format(SEED)
+    WSC_OPTIONS = "-r 1 -i 50 -d 25 -z 0.166 -p 50 -u 0.2 -s {} -v -a".format(SEED)
 
     # trial.word.wordsub
     input_dir = opts.inpath.replace('.', '/')
@@ -285,11 +301,14 @@ def scode():
     dataset, app_type, data = opts.inpath.split('.')
 
     OUT = os.path.join(dataset, app_type) + '/scode/'
+    if not os.path.exists(OUT):
+        os.makedirs(OUT)
 
     files = os.listdir(input_dir)
     for fname in files:
         fulln = os.path.join(input_dir, fname)
-        fn = '.'.join(fname.split('.')[:2])
+        ff = fname.split('.')
+        fn = '.'.join(ff[:len(ff)-2])
         #command = "zcat %s | " + awk_com + " | " + "../bin/scode " + WSC_OPTIONS + \
                                                                     #" | gzip > %s"
         command = "zcat %s  | ../bin/scode " + WSC_OPTIONS + " | gzip > %s"
