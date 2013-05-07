@@ -177,6 +177,7 @@ def _wkmeans(files, input_dir, head_com='', k=None):
             command = head_com + ' ../bin/wkmeans -k {} -r 5 -s {} > {} '
             command = command.format(fulln, k[fn], SEED, outpath + fn + '.ans')
         else:
+            logger.debug("here")
             command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} > {}'
             #command = 'cat {} | ../bin/wkmeans -k {} -r 5 -s {} -v > {}'
             command = command.format(fulln, k[fn], SEED, outpath + fn + '.ans')

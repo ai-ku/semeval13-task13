@@ -173,10 +173,16 @@ trial.word.%.scode.xy.ans: trial/word/ans/%.scode.xy.ans trial/word/scode/%.scod
 	trial/word/wordsubs/$*.pairs.gz ${WORDSUB} | ../bin/evaluate.py \
 	-g trial/word/gold/$*.gold -m 1 > eval/$*.ans
 
+# wordsub -> scode -> kmeans -> multiclass answers
+test.pos.%.scode.ans: test/pos/ans/%.scode.ans test/pos/scode/%.scode.gz test/pos/wordsubs/%.pairs.gz
+	../bin/calc_clust.py $< test/pos/scode/$*.scode.gz \
+	test/pos/wordsubs/$*.pairs.gz 1 ${WORDSUB} | ../bin/evaluate.py \
+	-g test/pos/gold/$*.gold -m 1 > eval/$*.ans
+
 ### EXPERIMENTS ###
 
 # trial.exp3 scode multi
-trial.scode.exp.%.evaluation: eval/3/
+trial.scode.exp.%.evaluation: eval/%/
 	#TODO: calc part
 	# ....
 	# evaluation part
@@ -187,13 +193,37 @@ trial.scode.exp.%.evaluation: eval/3/
 		make $${ff}; \
 	done
 
-trial.xy: trial/word/scode
+
+# trial.exp3 scode multi
+test.scode.exp.%.evaluation: eval/7/
+	#TODO: calc part
+	# ....
+	# evaluation part
+	-mkdir eval/$*/
+	-rm -rfi eval/$*/*
+	for fname in $(shell find test/pos/ans/ -name "*.ans"); do \
+		ff=$$(echo $${fname}| sed 's/\//./g' | sed 's/ans.//'); \
+		make $${ff}; \
+	done
+
+
+word.%.xy: %/word/scode
 	-mkdir $<_xy
 	-rm -rf $<_xy/*
-	for fname in $(shell find trial/word/raw/ -type f -printf "%f\n"); do \
+	for fname in $(shell find $*/word/raw/ -type f -printf "%f\n"); do \
 		zcat $</$${fname}.scode.gz | ../bin/x+y2kmeans.py \
-		-p trial/word/wordsubs/$${fname}.pairs.gz \
-	     > trial/word/scode_xy/$${fname}.scode.xy.gz; \
+		-p $*/word/wordsubs/$${fname}.pairs.gz \
+		 > $*/word/scode_xy/$${fname}.scode.xy.gz; \
+	done
+		#ff=$$(echo $${fname} | perl -pe 's|trial/word/scode/||g'); \
+
+pos.%.xy: %/pos/scode
+	-mkdir $<_xy
+	-rm -rf $<_xy/*
+	for fname in $(shell find $*/pos/raw/ -type f -printf "%f\n"); do \
+		zcat $</$${fname}.scode.gz | ../bin/x+y2kmeans.py \
+		-p $*/pos/wordsubs/$${fname}.pairs.gz \
+	     > $*/pos/scode_xy/$${fname}.scode.xy.gz; \
 	done
 		#ff=$$(echo $${fname} | perl -pe 's|trial/word/scode/||g'); \
 
@@ -242,17 +272,28 @@ trial.%.key: baselines/
 	#rm -rf baselines/*.eval
 
 
+#trial.%.ans:
+	##supervised:
+	##java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} eval/$@ > eval/$*.sup.gkgamma.eval
+	#java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD}  eval/$@ > eval/$*.sup.ji.eval
+	#java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD}  eval/$@ > eval/$*.sup.wtau.eval
+	#java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD}  eval/$@ >  eval/$*.sup.wndcg.eval
+	##unsupervised
+	##java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} eval/$@ > eval/$*.uns.fbcubed.eval
+	##java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} eval/$@ > eval/$*.uns.fnmi.eval
+	##java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} eval/$@  all > eval/$*.uns.vm.eval
+	##java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} eval/$@ all > eval/$*.uns.fs.eval
+	#tail -n 2 eval/$*.*.eval > eval/$*.scores
+	#rm -rf eval/*.eval
+
+EVAL=../test_data/scoring/
 %.ans:
-	#supervised:
-	#java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} eval/$@ > eval/$*.sup.gkgamma.eval
-	java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD}  eval/$@ > eval/$*.sup.ji.eval
-	java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD}  eval/$@ > eval/$*.sup.wtau.eval
-	java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD}  eval/$@ >  eval/$*.sup.wndcg.eval
-	#unsupervised
-	#java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} eval/$@ > eval/$*.uns.fbcubed.eval
-	#java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} eval/$@ > eval/$*.uns.fnmi.eval
-	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} eval/$@  all > eval/$*.uns.vm.eval
-	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} eval/$@ all > eval/$*.uns.fs.eval
+	#java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.ji.eval
+	#java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.wtau.eval
+	#java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD_TEST}  eval/$@ >  eval/$*.sup.wndcg.eval
+	java -jar ${EVAL}jaccard-index.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.ji.eval
+	#java -jar ${EVAL}positional-tau.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.wtau.eval
+	#java -jar ${EVAL}weighted-ndcg.jar ${GOLD_TEST}  eval/$@ >  eval/$*.sup.wndcg.eval
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
 	rm -rf eval/*.eval
 
