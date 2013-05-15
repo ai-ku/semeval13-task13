@@ -8,9 +8,9 @@ import os
 from utils import get_files
 import gzip
 
-def convert_ungraded():
 
-    """ This method converts whole data to trial.ungraded.gold 
+def convert_ungraded():
+    """ This method converts whole data to trial.ungraded.gold
         ../ung_gold.py > trial.ungraded.gold
     """
 
@@ -18,14 +18,14 @@ def convert_ungraded():
 
     for line in lines:
         line = line.split()
-        max_sense_id = ''; max_rating = -1.0
+        max_sense_id = ''
+        max_rating = -1.0
         for sense in line[2:]:
-            sense_tup= sense.split('/')
+            sense_tup = sense.split('/')
             sense_id, rating = sense_tup[0], float(sense_tup[1])
             if rating > max_rating:
                 max_sense_id, max_rating = sense_id, rating
         print ' '.join(line[:2]), max_sense_id
-
 
 
 def max_grade(input_dir, out_dir=None):
@@ -47,9 +47,10 @@ def max_grade(input_dir, out_dir=None):
         g = gzip.open(out_fn, 'w')
         for line in f.readlines():
             line = line.split()
-            max_sense_id = ''; max_rating = -1.0
+            max_sense_id = ''
+            max_rating = -1.0
             for sense in line[2:]:
-                sense_tup= sense.split('/')
+                sense_tup = sense.split('/')
                 sense_id, rating = sense_tup[0], float(sense_tup[1])
                 if rating > max_rating:
                     max_sense_id, max_rating = sense_id, rating
@@ -59,13 +60,10 @@ def max_grade(input_dir, out_dir=None):
         g.close()
 
 
-    
-
 def main():
-    #input_dir = sys.argv[1]
-    #max_grade(input_dir)
+    # input_dir = sys.argv[1]
+    # max_grade(input_dir)
     convert_ungraded()
 
 if __name__ == '__main__':
     main()
-

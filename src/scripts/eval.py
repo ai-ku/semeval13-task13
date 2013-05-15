@@ -4,7 +4,7 @@
 
 __author__ = "Osman Baskaya"
 
-# ../bin/eval.py trial/word/ans 3 
+# ../bin/eval.py trial/word/ans 3
 # ../bin/eval.py trial/word/ans 3 5
 
 
@@ -15,10 +15,11 @@ import sys
 from itertools import product
 
 
-#gold_dir = 'trial/word/ungraded_gold/'
+# gold_dir = 'trial/word/ungraded_gold/'
 
 
 logger = ColorLogger('debug')
+
 
 def merge_ans_files(ans_dir, ids):
 
@@ -47,11 +48,10 @@ def merge_ans_files(ans_dir, ids):
             for i, line in enumerate(f.readlines()):
                 gold_line = glines[i].split()[:2]
                 nlines.append(' '.join(gold_line) + ' ' + line)
-        new = open('eval/'+bpath.replace('/', '.')+ '.'+ '.'.join(t) + '.ans','w')
+        new = open('eval/' + bpath.replace(
+            '/', '.') + '.' + '.'.join(t) + '.ans', 'w')
         new.write(''.join(nlines))
         new.close()
-
-
 
 
 def main():
@@ -61,4 +61,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
