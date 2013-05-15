@@ -14,18 +14,21 @@ import sys
 # ask.v.knn.3.spectral.c2
 # argument.n.knn.2
 
+
 def get_files(path, regex):
     return [f for f in os.listdir(path) if fnmatch.fnmatch(f, regex)]
+
 
 def get_uniq_field(path, ind=-1):
 
     files = os.listdir(path)
     return set([f.split('.')[ind] for f in files])
 
+
 def get_gold_k(k_file):
 
     k_lines = gzip.open(k_file).readlines()
-    #return [int(line.split()[1]) for line in k_lines]
+    # return [int(line.split()[1]) for line in k_lines]
     inst = [line.split()[0] for line in k_lines]
     k = [int(line.split()[1]) for line in k_lines]
     return dict(zip(inst, k))
@@ -37,10 +40,11 @@ def refresh_temp():
         shutil.rmtree(temp)
     os.mkdir(temp)
 
+
 def read2sparse(filename, start=1):
 
-    #TODO: Comment ekle ne zaman 1 ne zaman 0 verilmeli
-    
+    # TODO: Comment ekle ne zaman 1 ne zaman 0 verilmeli
+
     lines = open(filename).readlines()
     col = []
     row = []
@@ -55,25 +59,23 @@ def read2sparse(filename, start=1):
     data = map(float, data)
     col = map(int, col)
     if start == 1:
-        col = map(lambda x: x-1, col) # substract 1 from all indexes
+        col = map(lambda x: x - 1, col)  # substract 1 from all indexes
     return coo_matrix((data, (row, col)))
 
 
 def create_arff(fname, mat, gold):
-
-
     """ create files for Weka input format """
-    
+
     gold = [int(g.split('.')[-1]) for g in gold]
-    
+
     g = set(gold)
 
     gold = np.matrix(gold)
-    
+
     c = np.concatenate((mat.todense(), gold.T), axis=1)
 
     ncol = mat.shape[1]
-    #FIXME: pathi relative yap
+    # FIXME: pathi relative yap
     out = "/home/tyr/Desktop/local.weka/" + fname + '.arff'
     f = open(out, 'w')
     f.write("@relation %s\n\n" % fname)
@@ -82,7 +84,7 @@ def create_arff(fname, mat, gold):
     s = ','.join(map(str, g))
     f.write("@attribute class {%s}\n\n" % s)
     f.write("@data\n")
-    #FIXME: Avoid writing two times
+    # FIXME: Avoid writing two times
     np.savetxt(f, c, delimiter=',', fmt='%5f')
     f.close()
     lines = open(out).readlines()
@@ -102,19 +104,20 @@ def create_arff(fname, mat, gold):
 
 def writedense(filename, mat):
 
-    # matrix should be dense and it forms: [ [], [], ... ] 
+    # matrix should be dense and it forms: [ [], [], ... ]
     f = open(filename, 'w')
     for row in mat:
         f.write(' '.join(map(str, row)))
         f.write('\n')
     f.close()
 
+
 def check_dest(dest):
-    
-    n = dest+"_remove"
+
+    n = dest + "_remove"
     if os.path.isdir(n):
         shutil.rmtree(n)
-   
+
     if os.path.isdir(dest):
         shutil.move(dest, n)
     os.mkdir(dest)
@@ -122,19 +125,18 @@ def check_dest(dest):
 
 # for debug messages etc.
 class ColorLogger(object):
-    
+
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
-    
+
     def __init__(self, mode=None):
         if mode is None:
             self.disable()
         self.mode = mode.lower()
-
 
     def disable(self):
         self.HEADER = ''
@@ -150,9 +152,9 @@ class ColorLogger(object):
         else:
             print >> sys.stderr, message
 
+
 def main():
     pass
 
 if __name__ == '__main__':
     main()
-

@@ -9,7 +9,7 @@ import nltk
 from nltk.stem.wordnet import WordNetLemmatizer
 import sys
 
-DATA='../test_data/test.xml'
+DATA = '../test_data/test.xml'
 TARGET = "__XX__"
 
 lmtzr = WordNetLemmatizer()
@@ -25,6 +25,7 @@ def tokenize():
             tokens = nltk.word_tokenize(sentences)
             print ' '.join(tokens)
 
+
 def get_window(sentences, n=4, target=TARGET):
 
     tokens = nltk.word_tokenize(sentences)
@@ -32,19 +33,20 @@ def get_window(sentences, n=4, target=TARGET):
         index = tokens.index(TARGET)
     else:
         i = sentences.find(TARGET)
-        sentences = sentences[:i] + " " + TARGET + " " + sentences[i+len(TARGET):]
+        sentences = sentences[
+            :i] + " " + TARGET + " " + sentences[i + len(TARGET):]
         tokens = nltk.word_tokenize(sentences)
         if TARGET in tokens:
             index = tokens.index(TARGET)
         else:
             print >> sys.stderr, "Tokenize Error in get_window", sentences
             exit(-1)
-    start = max(index-n+1, 0)
+    start = max(index - n + 1, 0)
     return tokens[start:index] + tokens[index:index + n]
 
 
 def parse():
-    
+
     soup = BeautifulSoup(open(DATA), 'xml')
     instances = soup.find_all('instances')
     for word in instances:
@@ -63,7 +65,7 @@ def parse():
 
 
 def main():
-    #parse()
+    # parse()
     tokenize()
 
 if __name__ == '__main__':

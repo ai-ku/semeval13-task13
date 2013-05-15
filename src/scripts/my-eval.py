@@ -7,6 +7,7 @@ from optparse import OptionParser
 import sys
 import gzip
 
+
 def open_file(f):
     if f == '-':
         return sys.stdin
@@ -15,12 +16,14 @@ def open_file(f):
     else:
         return open(f)
 
+
 def process_file(f):
     targets = dd(lambda: dd(list))
     for line in open_file(f):
         line = line.split()
         targets[line[0]][line[1]].extend(line[2:])
     return targets
+
 
 def process_target(target):
     counts = dd(int)
@@ -32,6 +35,7 @@ def process_target(target):
             values[sense_value[0]] += float(sense_value[1])
             vector[i] = (sense_value[0], float(sense_value[1]))
     return counts, values
+
 
 def enumerate_instances(target, valid_senses, size):
     c = count()
@@ -45,17 +49,21 @@ def enumerate_instances(target, valid_senses, size):
         new_target[target_id] = new_vector
     return new_target, mapping
 
+
 def prob_normalize(vector):
     s = sum(vector)
     return [v / s for v in vector]
+
 
 def len_normalize(vector):
     l = sum((v * v for v in vector)) ** 0.5
     return [v / l for v in vector]
 
+
 def cosine_similarity(v0, v1, mapping):
     c = abs(sum((v0[i] * v1[mapping[i]] for i in xrange(len(v0)))) - 1) * 0.5
     return c
+
 
 def kl_divergence(p, q):
     s = 0
@@ -64,6 +72,7 @@ def kl_divergence(p, q):
             s += log(p / q) * p
     return s
 
+
 def js_similarity(v0, v1, mapping):
     p = v0
     q = [v1[mapping[i]] for i in xrange(len(v1))]
@@ -71,10 +80,15 @@ def js_similarity(v0, v1, mapping):
     return (kl_divergence(p, m) + kl_divergence(q, m))
 
 parser = OptionParser(usage="New scoring script")
-parser.add_option('-g', '--gold', dest='gold', help='gold keys, - for reading gold from stdin')
-parser.add_option('-a', '--answer', dest='answer', help='answer keys, - for reading answer from stdin')
-parser.add_option('-s', '--similarity', dest='similarity', help='similarity function, cos or js. default cos')
-parser.add_option('-r', '--remove', dest='remove', help='remove extra senses in answer, count or value. default removes lowest values')
+parser.add_option('-g', '--gold', dest='gold',
+                  help='gold keys, - for reading gold from stdin')
+parser.add_option('-a', '--answer', dest='answer',
+                  help='answer keys, - for reading answer from stdin')
+parser.add_option('-s', '--similarity', dest='similarity',
+                  help='similarity function, cos or js. default cos')
+parser.add_option('-r', '--remove', dest='remove',
+                  help='remove extra senses in answer, \
+                  count or value. default removes lowest values')
 
 (options, args) = parser.parse_args()
 
@@ -100,7 +114,8 @@ else:
 
 target_scores = {}
 for target in gold_targets.iterkeys():
-    if ans_targets.get(target) == None: continue
+    if ans_targets.get(target) is None:
+        continue
 
     gold_target = gold_targets[target]
     gold_counts, gold_values = process_target(gold_target)
@@ -123,12 +138,16 @@ for target in gold_targets.iterkeys():
 
     if len(gold_counts) < len(ans_counts):
         if remove_counts:
-            ans_counts = dict(sorted(ans_counts.iteritems(), key=lambda x: x[1], reverse=True)[:len(gold_counts)])
+            ans_counts = dict(sorted(ans_counts.iteritems(), key=lambda x: x[
+                              1], reverse=True)[:len(gold_counts)])
         else:
-            ans_counts = dict(sorted(ans_values.iteritems(), key=lambda x: x[1], reverse=True)[:len(gold_counts)])
+            ans_counts = dict(sorted(ans_values.iteritems(), key=lambda x: x[
+                              1], reverse=True)[:len(gold_counts)])
 
-    gold_target, gold_mapping = enumerate_instances(gold_target, gold_counts, len(gold_counts))
-    ans_target, ans_mapping = enumerate_instances(ans_target, ans_counts, len(gold_counts))
+    gold_target, gold_mapping = enumerate_instances(
+        gold_target, gold_counts, len(gold_counts))
+    ans_target, ans_mapping = enumerate_instances(
+        ans_target, ans_counts, len(gold_counts))
 
     # print "============================================="
     # print gold_target
@@ -149,13 +168,14 @@ for target in gold_targets.iterkeys():
 
     min_mapping = (float('inf'), None)
     for mapping in permutations(xrange(len(gold_counts))):
-        score = sum((similarity(gold_vectors[i], ans_vectors[i], mapping) for i in xrange(len(gold_vectors))))
+        score = sum((similarity(gold_vectors[i], ans_vectors[
+                    i], mapping) for i in xrange(len(gold_vectors))))
         min_mapping = min(min_mapping, (score, mapping))
 
     target_scores[target] = (min_mapping[0], len(gold_vectors))
 
-#for target, score in sorted(target_scores.iteritems()):
-    #print "%s\t%d\t%.2f" % (target, score[1], score[0])
+# for target, score in sorted(target_scores.iteritems()):
+    # print "%s\t%d\t%.2f" % (target, score[1], score[0])
 
 total_count = sum((x[1] for x in target_scores.itervalues()))
 total_score = sum((x[0] for x in target_scores.itervalues()))

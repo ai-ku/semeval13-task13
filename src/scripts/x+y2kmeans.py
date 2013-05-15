@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
-import sys, gzip #argparse
+import sys
+import gzip  # argparse
 from optparse import OptionParser
 from collections import defaultdict as dd
 
 parser = OptionParser()
-#parser = argparse.ArgumentParser(description='Finds unique x-y pairs and concatenates their vectors. Requires scode output to stdin.')
+# parser = argparse.ArgumentParser(description='Finds unique x-y pairs and
+# concatenates their vectors. Requires scode output to stdin.')
 parser.add_option('-p', '--pairs', help='wordsub output', dest="pairs")
 (args, op) = parser.parse_args()
 

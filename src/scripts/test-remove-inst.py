@@ -5,13 +5,14 @@ __author__ = "Osman Baskaya"
 
 import gzip
 
-key="../test_data/keys/gold/all.key"
-data="test.gz"
-sub="test.sub.gz"
+key = "../test_data/keys/gold/all.key"
+data = "test.gz"
+sub = "test.sub.gz"
+
 
 def main():
     keyfile = open(key).readlines()
-    data_file= gzip.open(data).readlines()
+    data_file = gzip.open(data).readlines()
     sub_file = gzip.open(sub).readlines()
 
     f = gzip.open("test.gz", 'w')
@@ -28,4 +29,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -6,23 +6,24 @@ __author__ = "Osman Baskaya"
 import gzip
 import random
 
-#INPUT = 'small.tok.gz'
+# INPUT = 'small.tok.gz'
 INPUT = '../data/tokenized/ukwac.tok.gz'
 TOTAL_TOKEN = 1000000
 RAND = 0.001
-CHUNKSIZE=10000
+CHUNKSIZE = 10000
+
 
 def data_split():
     """ ukWaC data split """
-        
+
     train = gzip.open('train.ukwac.tok.gz', 'w')
     test = gzip.open('test.ukwac.tok.gz', 'w')
-    count=0
+    count = 0
     f = gzip.open(INPUT)
     temp_words = []
     temp_test_words = []
     for line in f:
-        if random.random() < 0.01 and count<TOTAL_TOKEN:
+        if random.random() < 0.01 and count < TOTAL_TOKEN:
             temp_test_words.append(line)
             count += len(line.split())
             if len(temp_test_words) > CHUNKSIZE:
@@ -37,9 +38,9 @@ def data_split():
     train.write(''.join(temp_words))
     test.write(''.join(temp_test_words))
 
+
 def main():
     data_split()
 
 if __name__ == '__main__':
     main()
-

@@ -8,10 +8,10 @@ __author__ = "Osman Baskaya"
 
 from bs4 import BeautifulSoup
 import nltk
-#import re
+# import re
 from nltk.stem.wordnet import WordNetLemmatizer
 
-DATA='../trial_data/trial.xml'
+DATA = '../trial_data/trial.xml'
 TARGET = "__XX__"
 
 lmtzr = WordNetLemmatizer()
@@ -25,14 +25,15 @@ def tokenize():
         tokens = nltk.word_tokenize(sentences)
         print ' '.join(tokens)
 
+
 def get_window(tokens, n=4, target=TARGET):
     index = tokens.index(TARGET)
-    start = max(index-n+1, 0)
+    start = max(index - n + 1, 0)
     return tokens[start:index] + tokens[index:index + n]
 
 
 def parse():
-    
+
     soup = BeautifulSoup(open(DATA), 'xml')
     instances = soup.find_all('instance')
     for instance in instances:
@@ -44,7 +45,7 @@ def parse():
         tokenStart = int(instance['tokenStart'])
         sentences = instance.next
         sentences = sentences[:tokenStart] + TARGET + sentences[tokenEnd:]
-        #print sentences + "\n"
+        # print sentences + "\n"
         tokens = nltk.word_tokenize(sentences)
         window = ' '.join(get_window(tokens))
         senses = instance.find_all('sense')
@@ -54,13 +55,13 @@ def parse():
             sname = sense['name']
             gold.append(sname)
             gold.append(mean)
-        print inst_id, lemma + '.' + pos , pos, target, "\t", window, '\t', ' '.join(gold)
+        print inst_id, lemma + '.' + pos, pos, target,\
+            "\t", window, '\t', ' '.join(gold)
 
 
 def main():
-    #parse()
+    # parse()
     tokenize()
 
 if __name__ == '__main__':
     main()
-

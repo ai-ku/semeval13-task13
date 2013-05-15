@@ -7,7 +7,7 @@ __author__ = "Osman Baskaya"
 Reads a substitute file and prints word and a random substitute on each line.
 -n <number of substitutes per word>
 -s <random seed>
--u <if it is 1 then X pairs will be unique> 
+-u <if it is 1 then X pairs will be unique>
 e.g:
 
 -u 1 -n 2
@@ -37,7 +37,7 @@ parser.add_option("-u", "--uniq", dest="isUniq", default=0,
                   help="uniq target words", metavar="UNIQ_TARGET_WORDS")
 
 
-(opts, args) = parser.parse_args() 
+(opts, args) = parser.parse_args()
 
 NUBSUB = int(opts.numsub)
 if opts.seed is not None:
@@ -47,7 +47,7 @@ if opts.seed is not None:
 isUniq = False
 if int(opts.isUniq) != 0:
     isUniq = True
-    
+
 c = count(1)
 
 
@@ -58,16 +58,14 @@ for line in sys.stdin:
         totalp = 0
         sample = [''] * NUBSUB
         for i in xrange(1, len(line), 2):
-            p = 10 ** float(line[i+1])
+            p = 10 ** float(line[i + 1])
             totalp += p
             for j in xrange(NUBSUB):
                 if random.uniform(0, totalp) < p:
                     sample[j] = line[i]
-
 
     if isUniq:
         t_id = c.next()
         print '\n'.join(map(lambda y: target + str(t_id) + '\t' + y, sample))
     else:
         print '\n'.join(map(lambda y: target + '\t' + y, sample))
-        
