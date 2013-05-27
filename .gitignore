@@ -1,7 +1,6 @@
 run/*.gz
 bin/*
 data/*
-src/*
 !src/scripts
 
 *.py[cod]
