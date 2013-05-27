@@ -43,8 +43,7 @@ test.prep: test.gz
 %.tok.gz: ../%_data
 	#tokenize method trial.tok.gz test.tok.gz
 	# method tokenize diye duzeltmek gerekiyor.
-	../bin/$*_data_parser.py | gzip > $@
-
+	../bin/$*_tokenizer.py | gzip > $@
 
 #TODO prepare.% #training/test
 %.gz: ../%_data
@@ -227,10 +226,8 @@ pos.%.xy: %/pos/scode
 	done
 		#ff=$$(echo $${fname} | perl -pe 's|trial/word/scode/||g'); \
 
-
 test.gaps:
 	${MATLAB_PATH} < ../src/gap-statistics-matlab/calcClusterNum.m  > $@ 2> $@.err
-	
 
 ### EVALUATIONS ###
 
@@ -299,7 +296,6 @@ EVAL=../test_data/scoring/
 
 
 # CLEANING
-
 %.gz.clean:
 	rm -rf $*.gz $*.word.gz $*.id.gz $*.pos.gz $*.ngram.gz $*.gold.gz $*.tok.gz $*.target.gz
 

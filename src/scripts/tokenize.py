@@ -16,8 +16,6 @@ TEMPFILE = 'ukwac.temp'
 def tokenize(files, field=1):
     """ ukWaC tokenizer """
 
-
-
     for filename in files:
         print "Processing {}".format(filename)
 
