@@ -1,254 +1,305 @@
+### 1.1 BIN INSTALLATION
+bin:
+	cd ../bin; make
+
+### 1.2 COMMON OPTIONS
 SRILM_PATH=/opt/srilm/bin/i686-m64
-export PATH := ${PATH}:/work/_upos_new/bin:${SRILM_PATH}
+export PATH := ../../bin:.:${SRILM_PATH}:${PATH} # Binaries in the bin directory
+SEED=1  # Random seed
+NCPU=7 # Number of threads/processes to use for parallel computations
+#MATLAB_PATH=/mnt/opt/matlab/linux64/R2011a/bin/matlab -nojvm -nodisplay
+MATLAB_PATH=/usr/local/MATLAB/R2012a/bin/matlab -nojvm -nodisplay
+BIN=../bin/
+DATA=../data/tokenized/
+### 1.3 INPUT files:
+TRAIN=${DATA}train.ukwac.tok.gz # ukWaC Corpus wc=88214600 2247153469 12385653002
+TEST=${DATA}test.ukwac.tok.gz  # ukWaC Test Corpus wc= 39203 998193 5509360
+EVAL=../trial_data/evaluation/
+GOLD=../trial_data/evaluation/keys/gold-standard/trial.gold-standard.median.key
+GOLD_TEST=../test_data/keys/gold/all.key
+BASELINE=../trial_data/evaluation/keys/baselines/
 
-TRAIN1=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -5 | tail -5)
-TRAIN2=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -10 | tail -5)
-TRAIN3=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -15 | tail -5)
-TRAIN4=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -20 | tail -5)
-TRAIN5=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -25 | tail -5)
-TRIAL=../data/trial.xml
-TRIAL_WORDS=$(shell awk '{printf("%s.xml\n", $$1)}' ../data/baselines/mfs.key | sort -u)
-TEST=$(shell find ../data/test/ -name "*.xml" | sort)
+### 2.2 SRILM options:/matl
+LM_NGRAM=4# n-gram order
+LM_VOCAB=100 # words seen less than this in GETTRAIN will be replaced with <unk>
+LM_MTYPE=i686-m64 # architecture for compiling srilm
 
-SEED=1
+ukwac.split: #splitting data into training and test for perplexity calc.
+	../bin/data_splitter.py
 
-# train.tok.gz train.pos.gz train.lemma.gz: ${TRAIN1} ${TRAIN2} ${TRAIN3} ${TRAIN4} ${TRAIN5}
-# 	zcat ${TRAIN1} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | extract-train.py 1 &\
-# 	zcat ${TRAIN2} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | extract-train.py 2 &\
-# 	zcat ${TRAIN3} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | extract-train.py 3 &\
-# 	zcat ${TRAIN4} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | extract-train.py 4 &\
-# 	zcat ${TRAIN5} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | extract-train.py 5 &\
-# 	wait
-# 	zcat tok*.gz | gzip > train.tok.gz &\
-# 	zcat pos*.gz | gzip > train.pos.gz &\
-# 	zcat lemma*.gz | gzip > train.lemma.gz &\
-# 	wait
-#	rm tok*.gz pos*.gz lemma*.gz
+#TODO: Time ve wc'ler daha duzeltilmedi
+ukwac.tokenize: ## time=1h30m, wc=88214600 2247153469 12385653002
+	tokenize.py
 
-tok1.gz tok2.gz tok3.gz tok4.gz tok5.gz pos1.gz pos2.gz pos3.gz pos4.gz pos5.gz lemma1.gz lemma2.gz lemma3.gz lemma4.gz lemma5.gz: ${TRAIN1} ${TRAIN2} ${TRAIN3} ${TRAIN4} ${TRAIN5}
-	zcat ${TRAIN1} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | ./extract-train.py 1 &\
-	zcat ${TRAIN2} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | ./extract-train.py 2 &\
-	zcat ${TRAIN3} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | ./extract-train.py 3 &\
-	zcat ${TRAIN4} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | ./extract-train.py 4 &\
-	zcat ${TRAIN5} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | ./extract-train.py 5 &\
-	wait
+trial.all.gz: trial.gz trial.ngram.gz trial.gold.gz trial.pos.gz trial.word.gz trial.id.gz
+#test.all.gz: test.gz test.ngram.gz test.gold.gz test.pos.gz test.word.gz test.id.gz \
+			 #test.target.gz
+test.all.gz: test.ngram.gz test.gold.gz test.pos.gz test.word.gz test.id.gz \
+			 test.target.gz
 
-train.tok.gz train.pos.gz train.lemma.gz: tok1.gz tok2.gz tok3.gz tok4.gz tok5.gz pos1.gz pos2.gz pos3.gz pos4.gz pos5.gz lemma1.gz lemma2.gz lemma3.gz lemma4.gz lemma5.gz
-	zcat tok*.gz | gzip > train.tok.gz
-	zcat pos*.gz | gzip > train.pos.gz
-	zcat lemma*.gz | gzip > train.lemma.gz
+test.prep: test.gz
+	../bin/test-remove-inst.py
 
-LM_NGRAM=4  # n-gram order
-LM_VOCAB=400 # words seen less than this in GETTRAIN will be replaced with <unk>
+%.tok.gz: ../%_data
+	#tokenize method trial.tok.gz test.tok.gz
+	# method tokenize diye duzeltmek gerekiyor.
+	../bin/$*_tokenizer.py | gzip > $@
 
-train.vocab-all.gz: train.tok.gz
-	zcat $< | awk 'length($$0) < 1001' | \
-	ngram-count -write-order 1 -text - -write - | gzip > $@
+#TODO prepare.% #training/test
+%.gz: ../%_data
+	#parse method
+	../bin/$*_data_parser.py | gzip > $@
 
-train.vocab.gz: train.vocab-all.gz
-	zcat $< | awk '{if ($$2 >= ${LM_VOCAB}) print $$1}' | gzip > $@
-	zcat $@ | wc -l
+%.ngram.gz: %.gz
+	zcat $< | cut -f2 | gzip > $@
 
-train.lm.gz: train.tok.gz train.vocab.gz
-	zcat $< | awk 'length($$0) < 1001' | \
-	ngram-count -order ${LM_NGRAM} -kndiscount -interpolate -unk -vocab train.vocab.gz -text - -lm $@
+trial.gold.gz: ../trial_data/evaluation/keys/gold-standard/trial.gold-standard.key
+	#zcat $< | cut -f3 | gzip > $@
+	cat $< | gzip > $@
 
-trial.tok.gz: extract-test.py
-	extract-test.py ${TRAIL} | gzip > $@
+test.gold.gz: ${GOLD_TEST}
+	cat $< | gzip > $@
 
-test.tok.gz: extract-test.py
-	extract-test.py ${TEST} | gzip > $@
+# number of cluster, k
+trial.k.gz: ../trial_data
+	cat ${BASELINE}all-senses.key | awk '{if (NR % 50 == 1) print $$1"\t"NF-2;}' | gzip  > $@
 
-trial.ppl.gz: train.lm.gz trial.tok.gz
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
-	zcat trial.tok.gz | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
-	ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
+test.k.gz: ../test_data/keys/gold/
 
-test.ppl.gz: train.lm.gz test.tok.gz
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
-	zcat test.tok.gz | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
-	ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
 
-train.context.gz: train.tok.gz train.pos.gz train.lemma.gz
-	extract-train-context.py $^ ${TEST} ${TRIAL_WORDS} | gzip > $@
+%.pos.gz: %.gz
+	zcat $< | perl -lane 'print $$F[2]' | gzip > $@
+	
+%.target.gz: %.gz
+	zcat $< | perl -lane 'print $$F[3]' | gzip > $@
 
-trial.context.gz: extract-trial-context.py
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
-	extract-trial-context.py ${TRIAL} | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
-	merge-left-right-context.py | gzip > $@
+%.word.gz: %.gz
+	zcat $< | perl -lane 'print $$F[1]' | gzip > $@
 
-test.context.gz: extract-test-context.py
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
-	extract-test-context.py ${TEST} | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
-	merge-left-right-context.py | gzip > $@
+%.id.gz: %.gz
+	zcat $< | perl -lane 'print $$F[1]," ", $$F[0]' | gzip > $@
 
-random.context.gz: train.context.gz
-	zcat $< | sample-contexts.py 20000 | gzip > $@
+%.vocab.gz: ${DATA}%.tok.gz  ## LM_VOCAB=100: time=2219s wc=672335 672009 5983977
+	#awk '{if ($2 >= 20) {print $0}}' | gzip > $@
+	zcat $< | ngram-count -write-order 1 -text - -write - | \
+	awk '{if ($$2 >= ${LM_VOCAB}) {print $1}}' | gzip > $@ 
+	#zcat $< | ngram-count -write-order 1 -text - -write - | \
+	#perl -lane 'print $$F[0] if $$F[1] >= ${LM_VOCAB}' | gzip > $@
 
+ukwac.lm.gz: ukwac.vocab.gz ${TRAIN}
+	zcat ${TRAIN} | ngram-count -order ${LM_NGRAM} -kndiscount \
+	-interpolate -unk -vocab $< -text - -lm $@
+
+ukwac.ppl.gz: 
+	#zcat $*.tok.gz | \
+	#ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
+	zcat ${TEST} | ngram -order ${LM_NGRAM} \
+	-unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
+
+%.ppl.gz:
+	#test.ppl.gz trial.ppl.gz
+	zcat $*.tok.gz | ngram -order ${LM_NGRAM} \
+	-unk -lm ukwac.lm.gz -ppl - -debug 2 | gzip > $@
+
+### 2.3 FASTSUBS options:
 FS_NSUB=100 # go until you have this many substitutes
 FS_PSUB=1.0 # or this much cumulative probability
 FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
-# all.sub.gz: train.lm.gz train.context.gz trial.context.gz test.context.gz
-# 	zcat train.context.gz trial.context.gz test.context.gz |\
-# 	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > $@
 
-all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.gz trial.context.gz test.context.gz
-	zcat random.context.gz trial.context.gz test.context.gz |\
-	tail -n +000001 | head -250000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.1.gz &\
-	zcat random.context.gz trial.context.gz test.context.gz |\
-	tail -n +250001 | head -250000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.2.gz &\
-	zcat random.context.gz trial.context.gz test.context.gz |\
-	tail -n +500001 | head -250000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.3.gz &\
-	zcat random.context.gz trial.context.gz test.context.gz |\
-	tail -n +750001 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.4.gz &\
-	wait
+%.sub.gz: %.ngram.gz ukwac.lm.gz  ## FS_NSUB=100 FS_PSUB=1 
+	zcat $< | ../bin/fastsubs ${FS_OPTIONS} ukwac.lm.gz | grep -P '^__XX__\t' | gzip > $@
 
-target.sub.gz: all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz
-	zcat $^ | grep -P '^<\w+\.\w+' | gzip > $@
+%.localize: #%.sub.gz %.word.gz
+	-mkdir -p $*/word/raw/; 
+	-mkdir -p $*/word/gold/
+	-mkdir -p $*/word/subs/
+	-mkdir -p $*/pos/raw/
+	-mkdir -p $*/pos/gold/
+	-mkdir -p $*/pos/subs/
+	../bin/localize.py $*
 
-pairs.100.gz: target.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+%.unk: %.vocab.gz %.tok.gz # Calculates unknown word ratio
+	unknown.pl $< $*.tok.gz > $@
 
-# SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
-# #KM_OPTIONS=-k 7 -r 128 -l -w -v -s ${SEED}
+KNN=50
+DIS=2#Manhattan
 
-# %.scode.gz: pairs.100.gz
-# 	zcat $< | grep -P '^<$*' | scode -i 50 ${SC_OPTIONS} | gzip > $@
+# calc distance with DIS
+trial.knn.gz: trial.sub.gz
+	zcat $< | ../bin/preinput.py | ../bin/dists -k ${KNN} \
+	-v -d ${DIS} -p ${NCPU} 2> knn${DIS}.err | gzip > $@ 
 
-# %.kmeans.gz: %.scode.gz
-# 	zcat $< | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} | gzip > $@
+# calc distance with all type of metrics
+%.knn:
+	../bin/task13.py -f calc_dists -i $* -r "*"
 
-# out.key: pairs.100.gz
-# 	for f in add.v argument.n ask.v different.a important.a interest.n paper.n win.v;\
-# 	do make $$f.kmeans.gz & done; wait;\
-# 	for f in add.v argument.n ask.v different.a important.a interest.n paper.n win.v;\
-# 	do zcat $< | grep -P '<'$$f'.[^\d]' | find-sense.py $$f.kmeans.gz >> $@; done
+#make trial.word.raw_spect.wkmeans
+#make trial.word.raw.wkmeans
+%.wkmeans:
+	../bin/task13.py -f run_wkmeans -i $* -r "*"
 
-KM_OPTIONS=-r 128 -l -w -v -s ${SEED}
-out2.key: pairs.100.gz
-	zcat $< | grep -P '^<add.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 6 | gzip > km1.gz &\
-	zcat $< | grep -P '^<ask.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km2.gz &\
-	zcat $< | grep -P '^<win.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 4 | gzip > km3.gz &\
-	zcat $< | grep -P '^<argument.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km4.gz &\
-	zcat $< | grep -P '^<interest.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km5.gz &\
-	zcat $< | grep -P '^<paper.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km6.gz &\
-	zcat $< | grep -P '^<different.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km7.gz &\
-	zcat $< | grep -P '^<important.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km8.gz &\
-	wait
-	zcat km1.gz | grep -P '^<add.v.[^\d]' | sed 's/^<add.v.\(.*\)>\s\(.*\)/add.v \1 \2\/1/g' >> $@
-	zcat km2.gz | grep -P '^<ask.v.[^\d]' | sed 's/^<ask.v.\(.*\)>\s\(.*\)/ask.v \1 \2\/1/g' >> $@
-	zcat km3.gz | grep -P '^<win.v.[^\d]' | sed 's/^<win.v.\(.*\)>\s\(.*\)/win.v \1 \2\/1/g' >> $@
-	zcat km4.gz | grep -P '^<argument.n.[^\d]' | sed 's/^<argument.n.\(.*\)>\s\(.*\)/argument.n \1 \2\/1/g' >> $@
-	zcat km5.gz | grep -P '^<interest.n.[^\d]' | sed 's/^<interest.n.\(.*\)>\s\(.*\)/interest.n \1 \2\/1/g' >> $@
-	zcat km6.gz | grep -P '^<paper.n.[^\d]' | sed 's/^<paper.n.\(.*\)>\s\(.*\)/paper.n \1 \2\/1/g' >> $@
-	zcat km7.gz | grep -P '^<different.a.[^\d]' | sed 's/^<different.a.\(.*\)>\s\(.*\)/different.a \1 \2\/1/g' >> $@
-	zcat km8.gz | grep -P '^<important.a.[^\d]' | sed 's/^<important.a.\(.*\)>\s\(.*\)/important.a \1 \2\/1/g' >> $@
+%.spectral:
+	../bin/task13.py -f run_spectral -i $* -r "*" > $@ 2> $@.err
 
-out.key: pairs.100.gz
-	zcat $< | grep -P '^<add.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 6 | gzip > km1.gz &\
-	zcat $< | grep -P '^<ask.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km2.gz &\
-	zcat $< | grep -P '^<win.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 4 | gzip > km3.gz &\
-	zcat $< | grep -P '^<argument.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km4.gz &\
-	zcat $< | grep -P '^<interest.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km5.gz &\
-	zcat $< | grep -P '^<paper.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km6.gz &\
-	zcat $< | grep -P '^<different.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km7.gz &\
-	zcat $< | grep -P '^<important.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km8.gz &\
-	wait
-	zcat $< | grep -P '^<add.v.[^\d]' | find-sense.py km1.gz >> $@
-	zcat $< | grep -P '^<ask.v.[^\d]' | find-sense.py km2.gz >> $@
-	zcat $< | grep -P '^<win.v.[^\d]' | find-sense.py km3.gz >> $@
-	zcat $< | grep -P '^<argument.n.[^\d]' | find-sense.py km4.gz >> $@
-	zcat $< | grep -P '^<interest.n.[^\d]' | find-sense.py km5.gz >> $@
-	zcat $< | grep -P '^<paper.n.[^\d]' | find-sense.py km6.gz >> $@
-	zcat $< | grep -P '^<different.a.[^\d]' | find-sense.py km7.gz >> $@
-	zcat $< | grep -P '^<important.a.[^\d]' | find-sense.py km8.gz >> $@
+### WORDSUB ###
+WORDSUB=12 # Number of random substitutes per word
+TYPE=pos
+%.prewordsub.gz: #%.sub.gz %.target.gz
+	#TODO: Gereksiz. Localize fonksiyonu hallediyor bu isleri.
+	-mkdir $*/${TYPE}/subs/
+	# call: trial.prewordsub.gz
+	../bin/pre_wordsub.py $*.sub.gz $*.target.gz ${TYPE} | gzip > $@
+%.wordsub:
+	#call: trial.word.subs.wordsub
+	../bin/task13.py -f run_wordsub -i $* -r "*" --nsubs=${WORDSUB} 2> $@.err
 
-y-gold-cluster.key: pairs.100.gz
-	y-cluster.pl ${SEED} gold > $@
+### SCODE ###
 
-y-7-cluster.key: pairs.100.gz
-	y-cluster.pl ${SEED} 7 > $@
+# trial.word.wordsubs.scode
+%.scode:
+	../bin/task13.py -f run_scode -i $* -r "*"  #2> $@.err #> $@ 
 
-x-gold-cluster.key: pairs.100.gz
-	x-cluster.pl ${SEED} gold > $@
+# wordsub -> scode -> kmeans -> multiclass answers
+trial.word.%.scode.ans: trial/word/ans/%.scode.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
+	../bin/calc_clust.py $< trial/word/scode/$*.scode.gz \
+	trial/word/wordsubs/$*.pairs.gz ${WORDSUB} | ../bin/evaluate.py \
+	-g trial/word/gold/$*.gold -m 1 > eval/$*.ans
 
-x-7-cluster.key: pairs.100.gz
-	x-cluster.pl ${SEED} 7 > $@
+# X+Y
+# wordsub -> scode -> kmeans -> multiclass answers
+trial.word.%.scode.xy.ans: trial/word/ans/%.scode.xy.ans trial/word/scode/%.scode.gz trial/word/wordsubs/%.pairs.gz
+	../bin/x+y2eval.py $< trial/word/scode_xy/$*.scode.xy.gz \
+	trial/word/wordsubs/$*.pairs.gz ${WORDSUB} | ../bin/evaluate.py \
+	-g trial/word/gold/$*.gold -m 1 > eval/$*.ans
 
-x+y-gold-cluster.key: pairs.100.gz
-	x+y-cluster.pl ${SEED} gold > $@
+# wordsub -> scode -> kmeans -> multiclass answers
+test.pos.%.scode.ans: test/pos/ans/%.scode.ans test/pos/scode/%.scode.gz test/pos/wordsubs/%.pairs.gz
+	../bin/calc_clust.py $< test/pos/scode/$*.scode.gz \
+	test/pos/wordsubs/$*.pairs.gz 1 ${WORDSUB} | ../bin/evaluate.py \
+	-g test/pos/gold/$*.gold -m 1 > eval/$*.ans
 
-x+y-7-cluster.key: pairs.100.gz
-	x+y-cluster.pl ${SEED} 7 > $@
+### EXPERIMENTS ###
 
-sampled.tok1.gz sampled.pos1.gz: tok1.gz pos1.gz lemma1.gz sample-lines.py
-	./sample-lines.py ${SEED} 120000 tok1.gz pos1.gz lemma1.gz
+# trial.exp3 scode multi
+trial.scode.exp.%.evaluation: eval/%/
+	#TODO: calc part
+	# ....
+	# evaluation part
+	-mkdir eval/$*/
+	-rm -rfi eval/$*/*
+	for fname in $(shell find trial/word/ans/ -name "*.ans"); do \
+		ff=$$(echo $${fname}| sed 's/\//./g' | sed 's/ans.//'); \
+		make $${ff}; \
+	done
 
-global.sub1.gz global.sub2.gz: # train.lm.gz
-	zcat sampled.tok1.gz | tail -n +00001 | head -20000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > global.sub1.gz &\
-	zcat sampled.tok1.gz | tail -n +20001 | head -20000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > global.sub2.gz &\
-	wait
 
-global.sub3.gz global.sub4.gz: #train.lm.gz
-	zcat sampled.tok1.gz | tail -n +40001 | head -20000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > global.sub3.gz &\
-	zcat sampled.tok1.gz | tail -n +60001 | head -20000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > global.sub4.gz &\
-	wait
+# trial.exp3 scode multi
+test.scode.exp.%.evaluation: eval/7/
+	#TODO: calc part
+	# ....
+	# evaluation part
+	-mkdir eval/$*/
+	-rm -rfi eval/$*/*
+	for fname in $(shell find test/pos/ans/ -name "*.ans"); do \
+		ff=$$(echo $${fname}| sed 's/\//./g' | sed 's/ans.//'); \
+		make $${ff}; \
+	done
 
-global.sub5.gz global.sub6.gz: #train.lm.gz
-	zcat sampled.tok1.gz | tail -n +80001 | head -20000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > global.sub5.gz &\
-	zcat sampled.tok1.gz | tail -n +100001 | head -20000 |\
-	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > global.sub6.gz &\
-	wait
 
-global.sub.gz: global.sub1.gz global.sub2.gz global.sub3.gz global.sub4.gz global.sub5.gz global.sub6.gz
-	zcat $^ | grep -v -P '^</s>' | gzip > $@
+word.%.xy: %/word/scode
+	-mkdir $<_xy
+	-rm -rf $<_xy/*
+	for fname in $(shell find $*/word/raw/ -type f -printf "%f\n"); do \
+		zcat $</$${fname}.scode.gz | ../bin/x+y2kmeans.py \
+		-p $*/word/wordsubs/$${fname}.pairs.gz \
+		 > $*/word/scode_xy/$${fname}.scode.xy.gz; \
+	done
+		#ff=$$(echo $${fname} | perl -pe 's|trial/word/scode/||g'); \
 
-verb.sub.gz noun.sub.gz adj.sub.gz: global.sub.gz
-	zcat $< | ./split-vnj.py sampled.lemma1.gz sampled.pos1.gz
+pos.%.xy: %/pos/scode
+	-mkdir $<_xy
+	-rm -rf $<_xy/*
+	for fname in $(shell find $*/pos/raw/ -type f -printf "%f\n"); do \
+		zcat $</$${fname}.scode.gz | ../bin/x+y2kmeans.py \
+		-p $*/pos/wordsubs/$${fname}.pairs.gz \
+	     > $*/pos/scode_xy/$${fname}.scode.xy.gz; \
+	done
+		#ff=$$(echo $${fname} | perl -pe 's|trial/word/scode/||g'); \
 
-verb.pairs.100.gz: verb.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+test.gaps:
+	${MATLAB_PATH} < ../src/gap-statistics-matlab/calcClusterNum.m  > $@ 2> $@.err
 
-noun.pairs.100.gz: noun.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+### EVALUATIONS ###
 
-adj.pairs.100.gz: adj.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+ungraded.%.gold:
+	-mkdir -p $*/pos/ungraded_gold
+	-mkdir -p $*/word/ungraded_gold
+	for i in $*/word/gold/ $*/pos/gold/; do \
+		../bin/ung_gold.py $$i; \
+	done
 
-SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
-KM_OPTIONS=-k 32 -r 128 -l -w -v -s ${SEED}
-.SECONDARY:
-%.scode.gz: %.pairs.100.gz
-	zcat $< | scode -i 50 ${SC_OPTIONS} | gzip > $@
 
-# k=100	total	100	90.71
-# k=200	total	200	91.09
-# k=400	total	400	91.23
-%.kmeans.gz: %.scode.gz
-	zcat $< | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} | gzip > $@
+ai.ans:
+	@for fname in $(shell find eval/ -maxdepth 1 -name "*.ans" ); do \
+		echo $${fname}; \
+		../bin/my-eval.py -g ${GOLD} -a $${fname}; \
+	done
 
-out3.key: pairs.100.gz
-	zcat $< | grep -P '^<add.v.[^\d]' | find-sense-unk.py verb.kmeans.gz > $@
-	zcat $< | grep -P '^<ask.v.[^\d]' | find-sense-unk.py verb.kmeans.gz >> $@
-	zcat $< | grep -P '^<win.v.[^\d]' | find-sense-unk.py verb.kmeans.gz >> $@
-	zcat $< | grep -P '^<argument.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
-	zcat $< | grep -P '^<interest.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
-	zcat $< | grep -P '^<paper.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
-	zcat $< | grep -P '^<different.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
-	zcat $< | grep -P '^<important.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
+ai.%.ans:
+	../bin/my-eval.py -g ${GOLD} -a eval/$*.ans
 
-y-%-cluster-test.key: pairs.100.gz
-	y-cluster-test.pl ${SEED} $* > $@
+ai.baselines:
+	@for fname in $(shell find ../trial_data/evaluation/keys/baselines/ -maxdepth 1 -name "*.key" ); do \
+		echo $${fname}; \
+		../bin/my-eval.py -g ${GOLD} -a $${fname}; \
+		echo ""; \
+	done
+
+EARG=--no-remapping
+trial.%.key: baselines/
+	java -jar ${EVAL}supervised/jaccard-index.jar ${EARG} ${GOLD} ${BASELINE}$@ > baselines/$*.sup.ji.eval
+	java -jar ${EVAL}supervised/weighted-tau.jar ${EARG} ${GOLD} ${BASELINE}$@ > baselines/$*.sup.wtau.eval
+	java -jar ${EVAL}supervised/weighted-ndcg.jar ${EARG} ${GOLD} ${BASELINE}$@ >  baselines/$*.sup.wndcg.eval
+	#unsupervised
+	#java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fbcubed.eval
+	#java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} ${BASELINE}$@ > baselines/$*.uns.fnmi.eval
+	#java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} ${BASELINE}$@  all > baselines/$*.uns.vm.eval
+	#java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} ${BASELINE}$@ all > baselines/$*.uns.fs.eval
+	tail -n 2 baselines/$*.*.eval > baselines/$*.scores
+	#rm -rf baselines/*.eval
+
+
+#trial.%.ans:
+	##supervised:
+	##java -jar ${EVAL}supervised/gk-gamma.jar ${GOLD} eval/$@ > eval/$*.sup.gkgamma.eval
+	#java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD}  eval/$@ > eval/$*.sup.ji.eval
+	#java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD}  eval/$@ > eval/$*.sup.wtau.eval
+	#java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD}  eval/$@ >  eval/$*.sup.wndcg.eval
+	##unsupervised
+	##java -jar ${EVAL}unsupervised/fuzzy-b-cubed.jar ${GOLD} eval/$@ > eval/$*.uns.fbcubed.eval
+	##java -jar ${EVAL}unsupervised/fuzzy-nmi.jar ${GOLD} eval/$@ > eval/$*.uns.fnmi.eval
+	##java -jar ${EVAL}unsupervised/vmeasure.jar ${GOLD} eval/$@  all > eval/$*.uns.vm.eval
+	##java -jar ${EVAL}unsupervised/fscore.jar ${GOLD} eval/$@ all > eval/$*.uns.fs.eval
+	#tail -n 2 eval/$*.*.eval > eval/$*.scores
+	#rm -rf eval/*.eval
+
+EVAL=../test_data/scoring/
+%.ans:
+	#java -jar ${EVAL}supervised/jaccard-index.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.ji.eval
+	#java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.wtau.eval
+	#java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD_TEST}  eval/$@ >  eval/$*.sup.wndcg.eval
+	java -jar ${EVAL}jaccard-index.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.ji.eval
+	#java -jar ${EVAL}positional-tau.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.wtau.eval
+	#java -jar ${EVAL}weighted-ndcg.jar ${GOLD_TEST}  eval/$@ >  eval/$*.sup.wndcg.eval
+	tail -n 2 eval/$*.*.eval > eval/$*.scores
+	rm -rf eval/*.eval
+
+
+# CLEANING
+%.gz.clean:
+	rm -rf $*.gz $*.word.gz $*.id.gz $*.pos.gz $*.ngram.gz $*.gold.gz $*.tok.gz $*.target.gz
+
+%.clean: %/
+	rm -rf $*/*
+
+

@@ -14,17 +14,6 @@ TARGET = "__XX__"
 
 lmtzr = WordNetLemmatizer()
 
-
-def tokenize():
-    soup = BeautifulSoup(open(DATA), 'xml')
-    instances = soup.find_all('instances')
-    for word in instances:
-        word_instances = word.find_all('instance')
-        for instance in word_instances:
-            sentences = instance.next
-            tokens = nltk.word_tokenize(sentences)
-            print ' '.join(tokens)
-
 def get_window(sentences, n=4, target=TARGET):
 
     tokens = nltk.word_tokenize(sentences)
@@ -53,18 +42,17 @@ def parse():
             inst_id = instance['id']
             lemma = instance['lemma']
             pos = instance['partOfSpeech']
-            #target = instance['token']
+            target = instance['token']
             tokenEnd = int(instance['tokenEnd'])
             tokenStart = int(instance['tokenStart'])
             sentences = instance.next
             sentences = sentences[:tokenStart] + TARGET + sentences[tokenEnd:]
             window = ' '.join(get_window(sentences))
-            print inst_id, lemma + '.' + pos, pos, "\t", window
+            print inst_id, lemma + '.' + pos, pos, target, "\t", window
 
 
 def main():
     parse()
-    #tokenize()
 
 if __name__ == '__main__':
     main()
