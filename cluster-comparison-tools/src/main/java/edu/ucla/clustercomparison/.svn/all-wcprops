@@ -1,0 +1,107 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison
+END
+Entropy.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/Entropy.java
+END
+WeightedNormalizedDiscountedCumulativeGain.java
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/WeightedNormalizedDiscountedCumulativeGain.java
+END
+Evaluation.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/Evaluation.java
+END
+PositionalKendallsTau.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/PositionalKendallsTau.java
+END
+GradedReweightedKeyMapper.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/GradedReweightedKeyMapper.java
+END
+Counter.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/Counter.java
+END
+JaccardIndex.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/JaccardIndex.java
+END
+Log.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/Log.java
+END
+FuzzyRandIndex.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/FuzzyRandIndex.java
+END
+GoodmanKruskalGamma.java
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/GoodmanKruskalGamma.java
+END
+KeyUtil.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/KeyUtil.java
+END
+BaseScorer.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison/BaseScorer.java
+END
+AbstractEvaluation.java
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/AbstractEvaluation.java
+END
+Pair.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/Pair.java
+END
+FuzzyBCubed.java
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/FuzzyBCubed.java
+END
+KeyMapper.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/KeyMapper.java
+END
+Indexer.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/2/trunk/src/main/java/edu/ucla/clustercomparison/Indexer.java
+END

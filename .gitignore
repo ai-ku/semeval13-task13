@@ -1,4 +1,4 @@
-run/*
+run/*.gz
 bin/*
 data/*
 src/*

@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison/cl
+END
+GammaScorer.java
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison/cl/GammaScorer.java
+END
+CliRunner.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison/cl/CliRunner.java
+END
+WeightedTauScorer.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison/cl/WeightedTauScorer.java
+END
+WeightedNdcgScorer.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison/cl/WeightedNdcgScorer.java
+END
+JaccardIndexScorer.java
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/4/trunk/src/main/java/edu/ucla/clustercomparison/cl/JaccardIndexScorer.java
+END
