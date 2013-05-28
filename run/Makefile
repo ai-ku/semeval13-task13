@@ -240,6 +240,10 @@ KM_OPTIONS=-k 32 -r 128 -l -w -v -s ${SEED}
 %.kmeans.gz: %.scode.gz
 	zcat $< | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} | gzip > $@
 
+%.all.key: %.all.pairs.100.gz %.all.kmeans.gz sense-find.py
+	# adj.all.key, noun.all.key, verb.all.key
+	zcat $< | grep -P "^<\w+\.\w+\.\d+>" | ./sense-find.py $*.all.kmeans.gz > $@
+
 out3.key: pairs.100.gz
 	zcat $< | grep -P '^<add.v.[^\d]' | find-sense-unk.py verb.kmeans.gz > $@
 	zcat $< | grep -P '^<ask.v.[^\d]' | find-sense-unk.py verb.kmeans.gz >> $@
@@ -252,3 +256,9 @@ out3.key: pairs.100.gz
 
 y-%-cluster-test.key: pairs.100.gz
 	y-cluster-test.pl ${SEED} $* > $@
+
+pos-cluster-test: adj.all.scode.gz noun.all.scode.gz verb.all.scode.gz
+	-mkdir kmeans
+	-mkdir keys
+	./y-cluster-pos-test.py ${SEED} 32 64 128 256
+
