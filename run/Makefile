@@ -262,3 +262,10 @@ pos-cluster-test: adj.all.scode.gz noun.all.scode.gz verb.all.scode.gz
 	-mkdir keys
 	./y-cluster-pos-test.py ${SEED} 32 64 128 256
 
+#variance test:
+%.var:
+	./variance.pl $* > $@
+
+%.var.plot: %.var
+	./var-prep-plot.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
+
