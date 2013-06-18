@@ -266,6 +266,18 @@ pos-cluster-test: adj.all.scode.gz noun.all.scode.gz verb.all.scode.gz
 %.var:
 	./variance.pl $* > $@
 
-%.var.plot: %.var
-	./var-prep-plot.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
+%.var.plot-context: %.var
+	./var-prep-plot-context.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
 
+# context-based variance test
+pos.variance.test-context: noun.var.plot-context verb.var.plot-context adj.var.plot-context
+	tar -cvf var-test.context.tar *.var.plot-context
+	mv var-test.context.tar ~
+
+%.var.plot-word: %.var
+	./var-prep-plot-word.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
+
+# word-based variance test
+pos.variance.test-word: noun.var.plot-word verb.var.plot-word adj.var.plot-word
+	tar -cvf var-test.word.tar *.var.plot-word
+	mv var-test.word.tar ~
