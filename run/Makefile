@@ -8,7 +8,7 @@ TRAIN4=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -20 | tail -5)
 TRAIN5=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -25 | tail -5)
 TRIAL=../data/trial.xml
 TRIAL_WORDS=$(shell awk '{printf("%s.xml\n", $$1)}' ../data/baselines/mfs.key | sort -u)
-TEST=$(shell find ../data/test/ -name "*.xml" | sort)
+TEST=$(shell find ../test_data/contexts/ -name "*.xml" | sort)
 
 SEED=1
 
@@ -57,7 +57,7 @@ trial.tok.gz: extract-test.py
 	extract-test.py ${TRAIL} | gzip > $@
 
 test.tok.gz: extract-test.py
-	extract-test.py ${TEST} | gzip > $@
+	extract-test.py EST} | gzip > $@
 
 trial.ppl.gz: train.lm.gz trial.tok.gz
 	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
@@ -281,3 +281,12 @@ pos.variance.test-context: noun.var.plot-context verb.var.plot-context adj.var.p
 pos.variance.test-word: noun.var.plot-word verb.var.plot-word adj.var.plot-word
 	tar -cvf var-test.word.tar *.var.plot-word
 	mv var-test.word.tar ~
+
+### HDP Experiments ###
+test.pairs.gz: #pairs.100.gz
+	zcat $< | grep -P "^<\w+\..\.\d{1,3}>" | gzip > $@
+
+TEST_WORDS=$(shell ls ../test_data/contexts | sed 's/.xml//g' | sort)
+NSAMPLE=1000
+hdp-input-create: test.pairs.gz #target.sub.gz
+	python wordsub-collect.py $< ${SEED} ${NSAMPLE} ${TEST_WORDS}
