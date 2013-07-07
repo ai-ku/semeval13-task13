@@ -289,8 +289,8 @@ EVAL=../test_data/scoring/
 	#java -jar ${EVAL}supervised/weighted-tau.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.wtau.eval
 	#java -jar ${EVAL}supervised/weighted-ndcg.jar ${GOLD_TEST}  eval/$@ >  eval/$*.sup.wndcg.eval
 	java -jar ${EVAL}jaccard-index.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.ji.eval
-	#java -jar ${EVAL}positional-tau.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.wtau.eval
-	#java -jar ${EVAL}weighted-ndcg.jar ${GOLD_TEST}  eval/$@ >  eval/$*.sup.wndcg.eval
+	java -jar ${EVAL}positional-tau.jar ${GOLD_TEST}  eval/$@ > eval/$*.sup.wtau.eval
+	java -jar ${EVAL}weighted-ndcg.jar ${GOLD_TEST}  eval/$@ >  eval/$*.sup.wndcg.eval
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
 	rm -rf eval/*.eval
 
