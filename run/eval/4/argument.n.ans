@@ -1,0 +1,50 @@
+argument.n br-j41.snum=63 sense3/0.833333333333 sense4/0.166666666667
+argument.n br-j53.snum=17 sense3/0.25 sense5/0.0833333333333 sense4/0.666666666667
+argument.n br-j53.snum=29 sense1/0.833333333333 sense4/0.166666666667
+argument.n br-j60.snum=71 sense1/0.0833333333333 sense5/0.75 sense4/0.166666666667
+argument.n br-g16.snum=49 sense4/0.416666666667 sense6/0.583333333333
+argument.n br-f08.snum=52 sense3/0.0833333333333 sense5/0.166666666667 sense4/0.75
+argument.n br-a13.snum=77 sense4/0.416666666667 sense6/0.583333333333
+argument.n br-d02.snum=54 sense0/0.333333333333 sense3/0.666666666667
+argument.n br-l17.snum=85 sense0/0.75 sense4/0.166666666667 sense6/0.0833333333333
+argument.n br-g23.snum=79 sense1/0.75 sense4/0.25
+argument.n br-d02.snum=35 sense0/0.583333333333 sense6/0.416666666667
+argument.n br-g31.snum=6 sense4/0.166666666667 sense6/0.833333333333
+argument.n br-l09.snum=57 sense1/0.5 sense4/0.5
+argument.n br-g23.snum=100 sense0/0.5 sense2/0.333333333333 sense4/0.166666666667
+argument.n br-f08.snum=45 sense5/1.0
+argument.n br-j20.snum=90 sense2/1.0
+argument.n br-j11.snum=41 sense3/0.333333333333 sense4/0.583333333333 sense6/0.0833333333333
+argument.n br-f16.snum=83 sense5/0.583333333333 sense4/0.416666666667
+argument.n br-j20.snum=53 sense2/0.583333333333 sense4/0.416666666667
+argument.n br-g31.snum=5 sense0/0.5 sense3/0.416666666667 sense5/0.0833333333333
+argument.n br-f23.snum=35 sense1/1.0
+argument.n br-k01.snum=4 sense4/0.5 sense6/0.5
+argument.n br-d02.snum=12 sense1/0.583333333333 sense4/0.416666666667
+argument.n br-g23.snum=103 sense1/0.5 sense4/0.5
+argument.n br-f14.snum=26 sense0/0.333333333333 sense5/0.416666666667 sense4/0.25
+argument.n argument.n.bnc.00074131 sense0/0.416666666667 sense3/0.25 sense4/0.333333333333
+argument.n argument.n.bnc.00148099 sense0/0.416666666667 sense6/0.583333333333
+argument.n argument.n.bnc.00072253 sense1/0.166666666667 sense4/0.583333333333 sense6/0.25
+argument.n argument.n.bnc.00086811 sense0/0.333333333333 sense2/0.416666666667 sense4/0.25
+argument.n argument.n.bnc.00105645 sense5/0.583333333333 sense4/0.416666666667
+argument.n argument.n.bnc.00074516 sense3/1.0
+argument.n argument.n.bnc.00080811 sense3/0.75 sense4/0.25
+argument.n argument.n.bnc.00085055 sense2/0.666666666667 sense4/0.333333333333
+argument.n argument.n.bnc.00068257 sense2/1.0
+argument.n argument.n.bnc.00139725 sense2/0.666666666667 sense4/0.333333333333
+argument.n argument.n.bnc.00068618 sense0/1.0
+argument.n argument.n.bnc.00048268 sense3/0.75 sense5/0.0833333333333 sense4/0.166666666667
+argument.n argument.n.bnc.00084443 sense0/0.583333333333 sense4/0.333333333333 sense6/0.0833333333333
+argument.n argument.n.bnc.00016270 sense3/1.0
+argument.n argument.n.bnc.00150665 sense5/0.75 sense4/0.25
+argument.n argument.n.bnc.00105317 sense0/0.416666666667 sense3/0.0833333333333 sense5/0.5
+argument.n argument.n.bnc.00131545 sense1/0.666666666667 sense4/0.333333333333
+argument.n argument.n.bnc.00009543 sense0/0.416666666667 sense5/0.0833333333333 sense4/0.416666666667 sense6/0.0833333333333
+argument.n argument.n.bnc.00106818 sense0/0.416666666667 sense4/0.166666666667 sense6/0.416666666667
+argument.n argument.n.bnc.00008636 sense3/0.333333333333 sense5/0.5 sense4/0.166666666667
+argument.n argument.n.bnc.00150599 sense0/0.583333333333 sense4/0.416666666667
+argument.n argument.n.bnc.00068586 sense4/0.333333333333 sense6/0.666666666667
+argument.n argument.n.bnc.00068571 sense0/0.75 sense3/0.0833333333333 sense6/0.166666666667
+argument.n argument.n.bnc.00068548 sense6/1.0
+argument.n argument.n.bnc.00136756 sense0/0.333333333333 sense5/0.666666666667

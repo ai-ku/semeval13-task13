@@ -1,0 +1,50 @@
+add.v br-e11.snum=49 sense3/0.25 sense4/0.75
+add.v br-e15.snum=18 sense0/0.166666666667 sense3/0.583333333333 sense2/0.166666666667 sense5/0.0833333333333
+add.v br-g06.snum=56 sense3/0.333333333333 sense2/0.666666666667
+add.v br-a23.snum=15 sense0/0.416666666667 sense4/0.583333333333
+add.v br-e27.snum=79 sense3/0.416666666667 sense2/0.583333333333
+add.v br-j17.snum=10 sense3/0.333333333333 sense5/0.0833333333333 sense4/0.583333333333
+add.v br-b05.snum=34 sense3/0.25 sense5/0.75
+add.v br-a31.snum=16 sense2/0.416666666667 sense4/0.583333333333
+add.v br-p07.snum=70 sense3/0.25 sense4/0.75
+add.v br-j06.snum=65 sense0/1.0
+add.v br-k28.snum=130 sense0/0.166666666667 sense3/0.25 sense4/0.583333333333
+add.v br-g06.snum=87 sense5/0.416666666667 sense4/0.583333333333
+add.v br-f44.snum=29 sense0/0.666666666667 sense3/0.333333333333
+add.v br-a04.snum=13 sense1/1.0
+add.v br-c12.snum=60 sense2/1.0
+add.v br-e14.snum=99 sense1/0.916666666667 sense5/0.0833333333333
+add.v br-j38.snum=8 sense3/0.416666666667 sense5/0.583333333333
+add.v br-d05.snum=42 sense0/0.916666666667 sense5/0.0833333333333
+add.v br-j34.snum=34 sense0/1.0
+add.v br-e15.snum=99 sense0/1.0
+add.v br-k23.snum=87 sense0/0.75 sense3/0.25
+add.v br-l12.snum=38 sense3/0.583333333333 sense2/0.416666666667
+add.v br-n03.snum=37 sense3/0.666666666667 sense2/0.333333333333
+add.v br-b10.snum=123 sense3/0.666666666667 sense2/0.333333333333
+add.v br-a05.snum=48 sense2/0.333333333333 sense4/0.666666666667
+add.v add.v.bnc.00056620 sense1/1.0
+add.v add.v.bnc.00063659 sense3/0.5 sense2/0.5
+add.v add.v.bnc.00053418 sense3/0.25 sense2/0.75
+add.v add.v.bnc.00048402 sense3/0.416666666667 sense2/0.583333333333
+add.v add.v.bnc.00060898 sense0/0.0833333333333 sense3/0.25 sense5/0.666666666667
+add.v add.v.bnc.00039877 sense5/1.0
+add.v add.v.bnc.00060496 sense5/1.0
+add.v add.v.bnc.00007372 sense0/0.583333333333 sense3/0.416666666667
+add.v add.v.bnc.00059115 sense1/0.916666666667 sense0/0.0833333333333
+add.v add.v.bnc.00067172 sense3/0.25 sense2/0.75
+add.v add.v.bnc.00042378 sense1/1.0
+add.v add.v.bnc.00001354 sense0/0.333333333333 sense3/0.666666666667
+add.v add.v.bnc.00014985 sense0/0.25 sense4/0.75
+add.v add.v.bnc.00068081 sense0/0.666666666667 sense3/0.25 sense2/0.0833333333333
+add.v add.v.bnc.00080084 sense5/0.416666666667 sense4/0.583333333333
+add.v add.v.bnc.00040043 sense2/1.0
+add.v add.v.bnc.00002656 sense0/0.75 sense3/0.25
+add.v add.v.bnc.00074093 sense3/0.333333333333 sense2/0.666666666667
+add.v add.v.bnc.00013819 sense3/0.416666666667 sense2/0.166666666667 sense5/0.416666666667
+add.v add.v.bnc.00021833 sense3/0.25 sense2/0.75
+add.v add.v.bnc.00014608 sense3/0.416666666667 sense2/0.583333333333
+add.v add.v.bnc.00038507 sense0/1.0
+add.v add.v.bnc.00058520 sense5/1.0
+add.v add.v.bnc.00003517 sense2/0.416666666667 sense4/0.583333333333
+add.v add.v.bnc.00014126 sense2/0.333333333333 sense4/0.666666666667

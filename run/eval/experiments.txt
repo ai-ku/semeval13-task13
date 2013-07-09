@@ -1,0 +1,11 @@
+1. -> raw datalar uzerinden direk wkmeans k=perfect
+
+fastsubs -> dists (her dist metric'i icin ayri) -> wkmeans k=perfect
+
+2. -> spectral sonuclari uzerinden wkmeans k=perfect iken
+
+fastsubs -> dists (her dist metric'i icin ayri) -> spectral ->  wkmeans k=perfect
+
+3. -> wordsub ve scode uzerinde wkmeans k=perfect
+
+fastsubs -> wordsub -> scode -> wkmeans k=perfect
