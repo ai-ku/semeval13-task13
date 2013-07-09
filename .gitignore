@@ -40,7 +40,7 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
-hdp-wsi/wsi_output/*
-hdp-wsi/wsi_input/*
-hdp-wsi/topicmodelling/topicmodel_output/*
+run/hdp-wsi/wsi_output/*
+run/hdp-wsi/wsi_input/*
+run/hdp-wsi/topicmodelling/topicmodel_output/*
 run/*.err

@@ -1,16 +1,19 @@
 SRILM_PATH=/opt/srilm/bin/i686-m64
 export PATH := ${PATH}:/work/_upos_new/bin:${SRILM_PATH}
 
-TRAIN1=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -5 | tail -5)
-TRAIN2=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -10 | tail -5)
-TRAIN3=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -15 | tail -5)
-TRAIN4=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -20 | tail -5)
-TRAIN5=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -25 | tail -5)
+#TRAIN1=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -5 | tail -5)
+#TRAIN2=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -10 | tail -5)
+#TRAIN3=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -15 | tail -5)
+#TRAIN4=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -20 | tail -5)
+#TRAIN5=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -25 | tail -5)
 TRIAL=../data/trial.xml
 TRIAL_WORDS=$(shell awk '{printf("%s.xml\n", $$1)}' ../data/baselines/mfs.key | sort -u)
 TEST=$(shell find ../test_data/contexts/ -name "*.xml" | sort)
 
 SEED=1
+GOLD_ALL=test_data/keys/gold/all.key
+GOLD_SINGLE=test_data/keys/gold/all.singlesense.key
+
 
 # train.tok.gz train.pos.gz train.lemma.gz: ${TRAIN1} ${TRAIN2} ${TRAIN3} ${TRAIN4} ${TRAIN5}
 # 	zcat ${TRAIN1} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | extract-train.py 1 &\
@@ -300,3 +303,24 @@ hdp-input-create: test.pairs.gz #target.sub.gz
 NSAMPLE=1000
 noksan.hdp: test.pairs.gz #target.sub.gz
 	python wordsub-collect.py $< ${SEED} ${NSAMPLE} book.n trace.n
+
+hdp-run.%:
+	#hdp-wsi/run_wsi.sh
+	cp hdp-wsi/wsi_output/tm_wsi eval/hdp.$*.ans
+	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.$*.topics
+
+### Evaluation ###
+#echo "hdp-1 hdp-2 hdp-3" | xargs -n 1 | perl -lne 'm/hdp-(.*)/; print $1'
+EVAL=../test_data/scoring/
+eval.%:
+	java -jar ${EVAL}jaccard-index.jar ${GOLD_ALL} eval/$*.ans > eval/$*.sup.ji.eval
+	java -jar ${EVAL}positional-tau.jar ${GOLD_ALL} eval/$*.ans > eval/$*.sup.pt.eval
+	java -jar ${EVAL}weighted-ndcg.jar ${GOLD_ALL} eval/$*.ans > eval/$*.sup.wndcg.eval
+	java -jar ${EVAL}single-sense-precision.jar ${GOLD_SINGLE} \
+	eval/$*.ans > eval/$*.sup.ssp.eval
+	java -jar ${EVAL}fuzzy-bcubed.jar ${GOLD_ALL} eval/$*.ans > eval/$*.un.fb.eval
+	java -jar ${EVAL}fuzzy-nmi.jar ${GOLD_ALL} eval/$*.ans > eval/$*.un.fnmi.eval
+	tail -n 2 eval/$*.*.eval > eval/$*.scores
+	rm -rf eval/*.eval
+
+
