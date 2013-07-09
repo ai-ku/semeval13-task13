@@ -10,6 +10,8 @@ lemma_count = {}
 lemma_set = set()
 for arg in sys.argv[4:]:
     match = re.search("(\w+)\.(\w+)\.xml$", arg)
+    #FIXME: Bug var burada. Ayni lemma'ya sahip kelimeler var.
+    # Onlari eziyor. (trace.n, trace.v; book.n, book.v)
     lemma_pos[match.group(1)] =  match.group(2).upper()
     lemma_count[match.group(1)] =  count(1000)
     lemma_set.add(match.group(1))

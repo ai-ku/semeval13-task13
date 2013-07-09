@@ -1,2 +1,0 @@
-add.v 100
-appear.v 100

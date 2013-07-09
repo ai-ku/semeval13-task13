@@ -38,6 +38,7 @@ for f, t in zip(files, target_words):
 print >> sys.stderr, "Sampling started"
 regex = '<%s\.\d{4,}>\t.*'
 docs = gzip.open('pairs.100.gz').read()
+#docs = gzip.open('noksan.pairs.100.gz').read()
 #docs = gzip.open('dummy.gz').read()
 for f, t in zip(files, target_words):
     print >> sys.stderr, "%s processing" % t,

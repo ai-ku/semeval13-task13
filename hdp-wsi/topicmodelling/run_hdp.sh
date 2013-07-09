@@ -11,8 +11,7 @@ output_dir="topicmodel_output"
 stopword_file="stopwords.txt"
 #minimum vocab frequency to filter
 voc_minfreq=0
-max_iter=3
-seed=1373367764
+max_iter=300
 
 #run hdp
 #compile the code
@@ -30,7 +29,7 @@ echo ---------------------
 for output_dir in $files
 do
 ./hdp/hdp --algorithm train --data $output_dir/hdpdata.train.txt --directory $output_dir \
---max_iter $max_iter --save_lag -1 --gamma_b $gamma_b --alpha_b $alpha_b --random_seed $seed &
+--max_iter $max_iter --save_lag -1 --gamma_b $gamma_b --alpha_b $alpha_b &
 done
 wait
 

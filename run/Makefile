@@ -111,10 +111,16 @@ all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.
 	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.4.gz &\
 	wait
 
+noksan.sub.gz: random.noksan.context.gz
+	zcat $< | fastsubs ${FS_OPTIONS} train.lm.gz | grep -P '^<\w+\.\w+' |  gzip > $@
+
 target.sub.gz: all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz
 	zcat $^ | grep -P '^<\w+\.\w+' | gzip > $@
 
 pairs.100.gz: target.sub.gz
+	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+
+noksan.pairs.100.gz: noksan.sub.gz
 	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
 
 # SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
@@ -290,3 +296,7 @@ TEST_WORDS=$(shell ls ../test_data/contexts | sed 's/.xml//g' | sort)
 NSAMPLE=1000
 hdp-input-create: test.pairs.gz #target.sub.gz
 	python wordsub-collect.py $< ${SEED} ${NSAMPLE} ${TEST_WORDS}
+
+NSAMPLE=1000
+noksan.hdp: test.pairs.gz #target.sub.gz
+	python wordsub-collect.py $< ${SEED} ${NSAMPLE} book.n trace.n
