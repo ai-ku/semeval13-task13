@@ -311,8 +311,8 @@ noksan.hdp-input-create: test.pairs.gz #target.sub.gz
 	#./hdp-topics-stat.py $@.ans > eval/$@.dist
 	#wait
 
-# gamma optimization
-hdp.exp-gamma-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
+# parameter optimization
+hdp.exp-alpha-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
 	cd hdp-wsi/; ./run_wsi.sh $*; wait
 	cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
 	cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
