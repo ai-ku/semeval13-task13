@@ -7,7 +7,7 @@ __author__ = "Osman Baskaya"
 import os
 import numpy as np
 
-gammas = np.linspace(0.001, 0.9, 15)
+gammas = np.linspace(0.0001, 0.001, 10)
 print gammas
 
 for g in  gammas:

@@ -29,8 +29,9 @@ echo ---------------------
 
 
 # parameter details for hdp are in run_hdp_args.py
-./run_hdp_args.py $output_dir $max_iter $gamma_b $alpha_b $files | \
-    xargs -n 14 -P $CPU hdp/hdp
+./run_hdp_args.py $max_iter $gamma_b $alpha_b $files | \
+    xargs -n 14 -P $CPU ./hdp/hdp
+
 
 #count=0
 #for output_dir in $files
@@ -45,7 +46,6 @@ echo ---------------------
     #fi
 #done
 #wait
-
 
 echo -----------------------
 echo "all HDP processes done"
