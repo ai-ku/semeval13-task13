@@ -1,9 +1,9 @@
-
+#!/bin/bash
 ############
 #parameters#
 ############
 #hdp parameters
-gamma_b=0.1
+gamma_b=$1
 alpha_b=1.0
 #topic model output directory
 output_dir="topicmodel_output"
@@ -11,7 +11,8 @@ output_dir="topicmodel_output"
 stopword_file="stopwords.txt"
 #minimum vocab frequency to filter
 voc_minfreq=0
-max_iter=300
+max_iter=1000
+CPU=10
 
 #run hdp
 #compile the code
@@ -19,23 +20,36 @@ cd hdp
 make
 cd ..
 
-files=`find topicmodel_output/ -type d | grep "/*.[vnj]"`
+files=`find topicmodel_output/ -type d | grep "/*.[vnj]" | sort`
 num_files=`find topicmodel_output/ -type d | grep "/*.[vnj]" | wc -l `
 
 echo ---------------------
 echo Number of files: $num_files
 echo ---------------------
 
-for output_dir in $files
-do
-./hdp/hdp --algorithm train --data $output_dir/hdpdata.train.txt --directory $output_dir \
---max_iter $max_iter --save_lag -1 --gamma_b $gamma_b --alpha_b $alpha_b &
-done
-wait
 
-echo ------Start----------
-echo "hdp output ->> output"
-echo ---------------------
+# parameter details for hdp are in run_hdp_args.py
+./run_hdp_args.py $output_dir $max_iter $gamma_b $alpha_b $files | \
+    xargs -n 14 -P $CPU hdp/hdp
+
+#count=0
+#for output_dir in $files
+#do
+    #./hdp/hdp --algorithm train --data $output_dir/hdpdata.train.txt --directory $output_dir \
+        #--max_iter $max_iter --save_lag -1 --gamma_b $gamma_b --alpha_b $alpha_b &
+    #count=$(($count + 1))
+    #n=$(($count%$CPU))
+    #if [ $n -eq 0 ]
+    #then
+        #wait
+    #fi
+#done
+#wait
+
+
+echo -----------------------
+echo "all HDP processes done"
+echo -----------------------
 
 for output_dir in $files
 do
@@ -54,7 +68,3 @@ mv $output_dir/topics.txt.tmp $output_dir/topics.txt
 python hdp/CreateTopicWordProbPickle.py $output_dir/mode-topics.dat \
     $output_dir/vocabs.txt $output_dir/topics.pickle
 done
-
-echo ------Finish----------
-echo "hdp output ->> output"
-echo ---------------------

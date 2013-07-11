@@ -4,8 +4,72 @@ fastsubs -> dists (her dist metric'i icin ayri) -> wkmeans k=perfect
 
 2. -> spectral sonuclari uzerinden wkmeans k=perfect iken
 
-fastsubs -> dists (her dist metric'i icin ayri) -> spectral ->  wkmeans k=perfect
+FASTSubs -> dists (her dist metric'i icin ayri) -> spectral ->  wkmeans k=perfect
 
 3. -> wordsub ve scode uzerinde wkmeans k=perfect
 
 fastsubs -> wordsub -> scode -> wkmeans k=perfect
+--------------------------------------------
+07.July.2013 Experiments:
+
+Hierarchical Dirichlet Process Deneyleri:
+
+- hdp.exp1.ans 
+--------------
+
+gamma_b=0.1
+alpha_b=1.0
+stopwords = []
+voc_minfreq = 0
+max_iter=300
+Input: Local wordsubs + 1000 random wordsub from ukWac
+type: local approach
+neighborhood = True
+
+- hdp.exp2.ans
+--------------
+
+gamma_b=0.1
+alpha_b=1.0
+stopwords = []
+voc_minfreq = 0
+max_iter=600
+Input: Local wordsubs + 1000 random wordsub from ukWac
+type: local approach
+neighborhood = True
+
+- hdp.exp3.ans
+----------------
+
+gamma_b=0.1
+alpha_b=1.0
+stopwords = []
+voc_minfreq = 0
+max_iter=300
+Input: Local wordsubs + 1000 random wordsub from ukWac
+type: local approach
+neighborhood = False
+
+- hdp.exp4.ans
+----------------
+
+gamma_b=0.1
+alpha_b=1.0
+stopwords = []
+voc_minfreq = 0
+max_iter=1000
+Input: Local wordsubs + 1000 random wordsub from ukWac
+type: local approach
+neighborhood = False
+
+- hdp.exp5.ans
+----------------
+
+gamma_b=0.1
+alpha_b=1.0
+stopwords = []
+voc_minfreq = 0
+max_iter=1000
+Input: Local wordsubs + 1000 random wordsub from ukWac
+type: local approach
+neighborhood = False

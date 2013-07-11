@@ -1,6 +1,13 @@
 #!/bin/bash
 #Main script that drives the WSI system. Uses HDP as the topic model for inducing senses.
 
+if [ -z $1 ]
+then
+    gamma=0.1
+else
+    gamma=$1
+fi
+
 #parameters
 input_dir="wsi_input/example"
 output_dir="wsi_output"
@@ -22,10 +29,7 @@ rm $output_dir/$wsd_output.topics 2>/dev/null
 #extract the sentences from the dataset (test then train)
 for file in `ls $input_dir/$wsi_type`
 do
-    echo "============================================================================"
-    echo "--------------------------------"
     echo "Processing $file"
-    echo "--------------------------------"
 
     #get the word
     word=`basename $file .lemma`
@@ -56,8 +60,7 @@ done
 
 # run hdp in parallel
 cd topicmodelling/
-./run_hdp.sh
+./run_hdp.sh $gamma
 #creating results
 ../run_create_res_files.sh
 cd ../
-

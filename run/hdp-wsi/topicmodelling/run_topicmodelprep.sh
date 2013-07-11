@@ -43,10 +43,11 @@ fi
 python MakeWordStream.py $word.input.txt $output_dir 0
 
 #add positional word information
-echo "adding positional word information to wordstream"
-python AddContextWord.py $target_word < $output_dir/wordstream.train.txt \
-    > $output_dir/wordstream.train.txt.tmp
-mv $output_dir/wordstream.train.txt.tmp $output_dir/wordstream.train.txt  
+#echo "adding positional word information to wordstream"
+#python AddContextWord.py $target_word < $output_dir/wordstream.train.txt \
+    #> $output_dir/wordstream.train.txt.tmp
+#mv $output_dir/wordstream.train.txt.tmp $output_dir/wordstream.train.txt  
+
 #generate vocabulary
 python MakeVocab.py $output_dir/wordstream.train.txt $output_dir $voc_minfreq
 
