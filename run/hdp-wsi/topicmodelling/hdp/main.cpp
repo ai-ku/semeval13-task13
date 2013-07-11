@@ -118,11 +118,11 @@ int main(int argc, char** argv)
         printf("save_lag            = %d\n", save_lag);
         printf("init_topics         = %d\n", init_topics);
         printf("random_seed         = %d\n", seed);
-        printf("gamma_a             = %.2f\n", gamma_a);
-        printf("gamma_b             = %.2f\n", gamma_b);
-        printf("alpha_a             = %.2f\n", alpha_a);
-        printf("alpha_b             = %.2f\n", alpha_b);
-        printf("eta                 = %.2f\n", eta);
+        printf("gamma_a             = %.6f\n", gamma_a);
+        printf("gamma_b             = %.6f\n", gamma_b);
+        printf("alpha_a             = %.6f\n", alpha_a);
+        printf("alpha_b             = %.6f\n", alpha_b);
+        printf("eta                 = %.6f\n", eta);
         printf("#restricted_scans   = %d\n", num_restricted_scan);
         if (model_path != NULL)
         printf("saved model_path    = %s\n", model_path);
