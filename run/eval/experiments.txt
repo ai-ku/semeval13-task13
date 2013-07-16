@@ -62,11 +62,12 @@ Input: Local wordsubs + 1000 random wordsub from ukWac
 type: local approach
 neighborhood = False
 
-- hdp.exp5.ans
+- hdp.exp*.ans
 ----------------
 
-gamma_b=0.1
-alpha_b=1.0
+Deneylerde sadece gamma ve alpha parametreleri ile oynadim
+diger degiskenler sabit:
+
 stopwords = []
 voc_minfreq = 0
 max_iter=1000

@@ -3,8 +3,8 @@
 #parameters#
 ############
 #hdp parameters
-gamma_b=0.1
-alpha_b=$1
+gamma_b=0.001
+alpha_b=30
 #topic model output directory
 output_dir="topicmodel_output"
 #stopword file to use

@@ -12,8 +12,10 @@ for arg in sys.argv[4:]:
     match = re.search("(\w+)\.(\w+)\.xml$", arg)
     #FIXME: Bug var burada. Ayni lemma'ya sahip kelimeler var.
     # Onlari eziyor. (trace.n, trace.v; book.n, book.v)
-    lemma_pos[match.group(1)] =  match.group(2).upper()
-    lemma_count[match.group(1)] =  count(1000)
+    lemma = match.group(1)
+    pos = match.group(2).upper()
+    lemma_pos[lemma + pos] = pos
+    lemma_count[lemma + pos] =  count(1000)
     lemma_set.add(match.group(1))
 
 f_tok = gzip.open(sys.argv[1])
@@ -30,9 +32,11 @@ for l_tok, l_pos, l_lem, line in izip(f_tok, f_pos, f_lem, count(1)):
         sys.stderr.write(str(line) + ': ' + ' '.join(l_lem) + "\n")
         continue
     for i in xrange(len(l_lem)):
-        if l_lem[i] in lemma_set and l_pos[i].startswith(lemma_pos[l_lem[i]]):
-            print "%s <%s.%s.%d> %s" % (' '.join(l_tok[i - 3:i]),
-                                        l_lem[i],
-                                        l_pos[i][0].lower(),
-                                        lemma_count[l_lem[i]].next(),
-                                        ' '.join(l_tok[i + 1:i + 4]))
+        if l_lem[i] in lemma_set:
+            lempos = l_lem[i] + l_pos[i][0]
+            if lempos in lemma_pos:
+                print "%s <%s.%s.%d> %s" % (' '.join(l_tok[i - 3:i]),
+                                            l_lem[i],
+                                            l_pos[i][0].lower(),
+                                            lemma_count[lempos].next(),
+                                            ' '.join(l_tok[i + 1:i + 4]))

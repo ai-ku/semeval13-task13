@@ -1,13 +1,14 @@
 SRILM_PATH=/opt/srilm/bin/i686-m64
-export PATH := ${PATH}:/work/_upos_new/bin:${SRILM_PATH}
+export PATH := .:${PATH}:/work/_upos_new/bin:${SRILM_PATH}
 
 TRAIN1=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -5 | tail -5)
 TRAIN2=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -10 | tail -5)
 TRAIN3=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -15 | tail -5)
 TRAIN4=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -20 | tail -5)
 TRAIN5=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -25 | tail -5)
-TRIAL=../data/trial.xml
-TRIAL_WORDS=$(shell awk '{printf("%s.xml\n", $$1)}' ../data/baselines/mfs.key | sort -u)
+TRIAL=../trial_data/data/semeval-2013-task-10-trial-data.xml
+MFS=../trial_data/evaluation/keys/baselines/mfs.key
+TRIAL_WORDS=$(shell awk '{printf("%s.xml\n", $$1)}' ${MFS} | sort -u)
 TEST=$(shell find ../test_data/contexts/ -name "*.xml" | sort)
 
 SEED=1
@@ -59,7 +60,7 @@ trial.tok.gz: extract-test.py
 	extract-test.py ${TRAIL} | gzip > $@
 
 test.tok.gz: extract-test.py
-	extract-test.py EST} | gzip > $@
+	extract-test.py ${TEST} | gzip > $@
 
 trial.ppl.gz: train.lm.gz trial.tok.gz
 	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
@@ -74,22 +75,22 @@ test.ppl.gz: train.lm.gz test.tok.gz
 	ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
 
 train.context.gz: train.tok.gz train.pos.gz train.lemma.gz
-	extract-train-context.py $^ ${TEST} ${TRIAL_WORDS} | gzip > $@
+	./extract-train-context.py $^ ${TEST} ${TRIAL_WORDS} | gzip > $@
 
-trial.context.gz: extract-trial-context.py
+trial.context.gz: ./extract-trial-context.py
 	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
-	extract-trial-context.py ${TRIAL} | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
-	merge-left-right-context.py | gzip > $@
+	./extract-trial-context.py ${TRIAL} | awk '{print $$0, "</s>"}' |\
+	../bin/tree-tagger/cmd/tree-tagger-english | ./token2sent.py |\
+	./merge-left-right-context.py | gzip > $@
 
 test.context.gz: extract-test-context.py
 	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
-	extract-test-context.py ${TEST} | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
-	merge-left-right-context.py | gzip > $@
+	./extract-test-context.py ${TEST} | awk '{print $$0, "</s>"}' |\
+	../bin/tree-tagger/cmd/tree-tagger-english | ./token2sent.py |\
+	./merge-left-right-context.py | gzip > $@
 
 random.context.gz: train.context.gz
-	zcat $< | sample-contexts.py 20000 | gzip > $@
+	zcat $< | ./sample-contexts.py 20000 | gzip > $@
 
 FS_NSUB=100 # go until you have this many substitutes
 FS_PSUB=1.0 # or this much cumulative probability
@@ -98,7 +99,8 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 # 	zcat train.context.gz trial.context.gz test.context.gz |\
 # 	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > $@
 
-all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.gz trial.context.gz test.context.gz
+#all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.gz trial.context.gz test.context.gz
+all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.gz trial.context.gz test.context.gz
 	zcat random.context.gz trial.context.gz test.context.gz |\
 	tail -n +000001 | head -250000 |\
 	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.1.gz &\
@@ -113,8 +115,8 @@ all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.
 	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.4.gz &\
 	wait
 
-noksan.sub.gz: random.noksan.context.gz
-	zcat $< | fastsubs ${FS_OPTIONS} train.lm.gz | grep -P '^<\w+\.\w+' |  gzip > $@
+#noksan.sub.gz: random.noksan.context.gz
+	#zcat $< | fastsubs ${FS_OPTIONS} train.lm.gz | grep -P '^<\w+\.\w+' |  gzip > $@
 
 target.sub.gz: all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz
 	zcat $^ | grep -P '^<\w+\.\w+' | gzip > $@
@@ -122,14 +124,19 @@ target.sub.gz: all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz
 pairs.100.gz: target.sub.gz
 	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
 
-noksan.pairs.100.gz: noksan.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+#noksan.pairs.100.gz: noksan.sub.gz
+	#perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
 
-# SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
-# #KM_OPTIONS=-k 7 -r 128 -l -w -v -s ${SEED}
+SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
+ #KM_OPTIONS=-k 7 -r 128 -l -w -v -s ${SEED}
 
-# %.scode.gz: pairs.100.gz
-# 	zcat $< | grep -P '^<$*' | scode -i 50 ${SC_OPTIONS} | gzip > $@
+# example: add.v.scode.gz
+# caution: no instance enrichment will be made ({1,3})
+%.scode.gz: pairs.100.gz
+	 zcat $< | grep -P '^<$*\.\d{1,3}>' | scode -i 50 ${SC_OPTIONS} | gzip > scode/$@
+
+all.%.scode.gz: pairs.100.gz
+	 zcat $< | grep -P '^<$*' | scode -i 50 ${SC_OPTIONS} | gzip > $@
 
 # %.kmeans.gz: %.scode.gz
 # 	zcat $< | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} | gzip > $@
@@ -304,20 +311,34 @@ noksan.hdp-input-create: test.pairs.gz #target.sub.gz
 	python wordsub-collect.py $< ${SEED} ${NSAMPLE} book.n trace.n
 
 # main experiment target
-#hdp.exp-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
-	#cd hdp-wsi/; ./run_wsi.sh; wait
+hdp.exp-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
+	cd hdp-wsi/; ./run_wsi.sh; wait
+	cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
+	cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
+	./hdp-topics-stat.py $@.ans > eval/$@.dist
+	wait
+
+# parameter optimization
+#hdp.exp-alpha-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
+	#cd hdp-wsi/; ./run_wsi.sh $*; wait
 	#cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
 	#cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
 	#./hdp-topics-stat.py $@.ans > eval/$@.dist
 	#wait
 
-# parameter optimization
-hdp.exp-alpha-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
-	cd hdp-wsi/; ./run_wsi.sh $*; wait
-	cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
-	cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
-	./hdp-topics-stat.py $@.ans > eval/$@.dist
-	wait
+
+### KNN Calculations:
+
+knn-fastsub: target.sub.gz run-knn-fastsub.py
+	-mkdir knn/fastsub
+	run-knn-fastsub.py $< ${TEST_WORDS} 2>$@.err
+
+knn-scode: run-knn-scode.py
+	-mkdir knn/scode
+	run-knn-scode.py ${TEST_WORDS} #2>$@.err
+
+run-scode-no-enrich:
+	echo ${TEST_WORDS} | perl -lne 's/ |$$/.scode.gz /g; print' | xargs -n 1 -P 5 make
 
 ### Evaluation ###
 #echo "hdp-1 hdp-2 hdp-3" | xargs -n 1 | perl -lne 'm/hdp-(.*)/; print $1'
@@ -332,7 +353,5 @@ eval.%: eval/%.ans
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
 	rm -rf eval/*.eval
 
-
-
-
+.PRECIOUS: random.sub.gz train.context.gz train.lm.gz train.tok.gz train.pos.gz train.lemma.gz
 
