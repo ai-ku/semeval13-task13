@@ -44,3 +44,4 @@ run/hdp-wsi/wsi_output/*
 run/hdp-wsi/wsi_input/*
 run/hdp-wsi/topicmodelling/topicmodel_output/*
 run/*.err
+run/eval/*

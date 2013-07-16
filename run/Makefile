@@ -99,8 +99,7 @@ FS_OPTIONS=-n ${FS_NSUB} -p ${FS_PSUB}
 # 	zcat train.context.gz trial.context.gz test.context.gz |\
 # 	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > $@
 
-#all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.gz trial.context.gz test.context.gz
-all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.gz trial.context.gz test.context.gz
+all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.gz trial.context.gz test.context.gz
 	zcat random.context.gz trial.context.gz test.context.gz |\
 	tail -n +000001 | head -250000 |\
 	fastsubs ${FS_OPTIONS} train.lm.gz | gzip > all.sub.1.gz &\
@@ -347,7 +346,7 @@ eval.%: eval/%.ans
 	java -jar ${EVAL}jaccard-index.jar ${GOLD_ALL} $< > eval/$*.sup.ji.eval
 	java -jar ${EVAL}positional-tau.jar ${GOLD_ALL} $< > eval/$*.sup.pt.eval
 	java -jar ${EVAL}weighted-ndcg.jar ${GOLD_ALL} $< > eval/$*.sup.wndcg.eval
-	java -jar ${EVAL}single-sense-precision.jar ${GOLD_SINGLE} $< > eval/$*.sup.ssp.eval
+	java -jar ${EVAL}single-sense-precision.jar -s ${GOLD_SINGLE} $< > eval/$*.sup.ssp.eval
 	java -jar ${EVAL}fuzzy-bcubed.jar ${GOLD_ALL} $< > eval/$*.un.fb.eval
 	java -jar ${EVAL}fuzzy-nmi.jar ${GOLD_ALL} $< > eval/$*.un.fnmi.eval
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
