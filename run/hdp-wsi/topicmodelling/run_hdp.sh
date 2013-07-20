@@ -3,8 +3,8 @@
 #parameters#
 ############
 #hdp parameters
-gamma_b=0.001
-alpha_b=30
+gamma_b=$1
+alpha_b=$2
 #topic model output directory
 output_dir="topicmodel_output"
 #stopword file to use
@@ -12,7 +12,7 @@ stopword_file="stopwords.txt"
 #minimum vocab frequency to filter
 voc_minfreq=0
 max_iter=1000
-CPU=10
+CPU=25
 
 #run hdp
 #compile the code

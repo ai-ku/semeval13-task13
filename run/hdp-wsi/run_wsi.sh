@@ -1,11 +1,14 @@
 #!/bin/bash
 #Main script that drives the WSI system. Uses HDP as the topic model for inducing senses.
 
-if [ -z $1 ]
+if [ $# != 2 ] 
 then
-    gamma=0.1
+    echo "Wrong #of args: Provide gamma and alpha. Default: 0.1 1"
+    echo $#, $0, $1, $2
+    exit
 else
     gamma=$1
+    alpha=$2
 fi
 
 #parameters
@@ -49,6 +52,7 @@ do
     #remove hyphen
     target_word=`echo $target_word | cut -f 1-1 -d-`
     rm topicmodel_output/$word/* 2>/dev/null
+    # only one time needs to be run topicmodelprep
     ./run_topicmodelprep.sh $target_word $word
 
     #remove the softlinked file
@@ -60,7 +64,7 @@ done
 
 # run hdp in parallel
 cd topicmodelling/
-./run_hdp.sh $gamma
+./run_hdp.sh $gamma $alpha
 #creating results
 ../run_create_res_files.sh
 cd ../

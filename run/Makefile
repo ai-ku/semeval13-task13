@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 SRILM_PATH=/opt/srilm/bin/i686-m64
 export PATH := .:${PATH}:/work/_upos_new/bin:${SRILM_PATH}
 
@@ -117,8 +118,13 @@ all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz: train.lm.gz random.context.
 #noksan.sub.gz: random.noksan.context.gz
 	#zcat $< | fastsubs ${FS_OPTIONS} train.lm.gz | grep -P '^<\w+\.\w+' |  gzip > $@
 
-target.sub.gz: all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz
+target.sub.tmp.gz: all.sub.1.gz all.sub.2.gz all.sub.3.gz all.sub.4.gz
 	zcat $^ | grep -P '^<\w+\.\w+' | gzip > $@
+
+target.sub.gz: target.sub.tmp.gz
+	zcat $< | tail -4806 | ./clean-test-data.py ${GOLD_ALL} > clean.tmp 2>clean.err
+	cat <(zcat $< | head -n -4806) clean.tmp | gzip > $@
+	-rm clean.tmp target.sub.tmp.gz
 
 pairs.100.gz: target.sub.gz
 	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
@@ -132,7 +138,7 @@ SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
 # example: add.v.scode.gz
 # caution: no instance enrichment will be made ({1,3})
 %.scode.gz: pairs.100.gz
-	 zcat $< | grep -P '^<$*\.\d{1,3}>' | scode -i 50 ${SC_OPTIONS} | gzip > scode/$@
+	 zcat $< | grep -P '^<$*\.\d{1,3}>' | scode -i 50 ${SC_OPTIONS} | gzip > scode_vec/$@
 
 all.%.scode.gz: pairs.100.gz
 	 zcat $< | grep -P '^<$*' | scode -i 50 ${SC_OPTIONS} | gzip > $@
@@ -305,42 +311,49 @@ NSAMPLE=1000
 hdp-input-create: test.pairs.gz #target.sub.gz
 	python wordsub-collect.py $< ${SEED} ${NSAMPLE} ${TEST_WORDS}
 
-# Data sampling bug'undan dolayi.
-noksan.hdp-input-create: test.pairs.gz #target.sub.gz
-	python wordsub-collect.py $< ${SEED} ${NSAMPLE} book.n trace.n
-
-# main experiment target
-hdp.exp-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
-	cd hdp-wsi/; ./run_wsi.sh; wait
+# alpha experiment
+hdp.exp-alpha-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py eval/ ./nlp_utils.py
+	cd hdp-wsi/; ./run_wsi.sh 0.1 $*; wait
 	cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
 	cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
 	./hdp-topics-stat.py $@.ans > eval/$@.dist
 	wait
 
-# parameter optimization
-#hdp.exp-alpha-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py
-	#cd hdp-wsi/; ./run_wsi.sh $*; wait
-	#cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
-	#cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
-	#./hdp-topics-stat.py $@.ans > eval/$@.dist
-	#wait
-
+# gamma experiment
+hdp.exp-gamma-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py eval/ ./nlp_utils.py
+	cd hdp-wsi/; ./run_wsi.sh $* 1; wait
+	cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
+	cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
+	./hdp-topics-stat.py $@.ans > eval/$@.dist
+	wait
 
 ### KNN Calculations:
 
 knn-fastsub: target.sub.gz run-knn-fastsub.py
 	-mkdir knn/fastsub
 	run-knn-fastsub.py $< ${TEST_WORDS} 2>$@.err
+	zcat knn/fastsub/*.gz | wc -l # sanity check: should be 23320
 
 knn-scode: run-knn-scode.py
 	-mkdir knn/scode
-	run-knn-scode.py ${TEST_WORDS} #2>$@.err
+	run-knn-scode.py ${TEST_WORDS} 2>$@.err
+	zcat knn/scode/*.gz | wc -l # sanity check: should be 18656
 
-run-scode-no-enrich:
+# evaluate supervised upperbound of fastsub output
+UFASTSUB=$(shell find knn/fastsub/ -maxdepth 1 -name "*knn*.gz" | sort)
+fastsub.knn.upperbound: knn/fastsub
+	./calc_upperbound.py ${GOLD_ALL} fastsub ${UFASTSUB} #2>$@.err
+
+# evaluate supervised upperbound of scode output (X side)
+USCODE=$(shell find knn/scode/ -maxdepth 1 -name "*knn*.gz" | sort)
+scode.knn.upperbound: knn/scode
+	./calc_upperbound.py ${GOLD_ALL} scode ${USCODE} #2>$@.err
+
+run-scode-no-enrich: pairs.100.gz
 	echo ${TEST_WORDS} | perl -lne 's/ |$$/.scode.gz /g; print' | xargs -n 1 -P 5 make
+	zcat scode_vec/*.gz | grep -P '^0:' | wc -l # sanity check: should be 4664
 
 ### Evaluation ###
-#echo "hdp-1 hdp-2 hdp-3" | xargs -n 1 | perl -lne 'm/hdp-(.*)/; print $1'
 EVAL=../test_data/scoring/
 eval.%: eval/%.ans
 	java -jar ${EVAL}jaccard-index.jar ${GOLD_ALL} $< > eval/$*.sup.ji.eval
@@ -350,7 +363,15 @@ eval.%: eval/%.ans
 	java -jar ${EVAL}fuzzy-bcubed.jar ${GOLD_ALL} $< > eval/$*.un.fb.eval
 	java -jar ${EVAL}fuzzy-nmi.jar ${GOLD_ALL} $< > eval/$*.un.fnmi.eval
 	tail -n 2 eval/$*.*.eval > eval/$*.scores
+	cat eval/$*.scores
 	rm -rf eval/*.eval
 
-.PRECIOUS: random.sub.gz train.context.gz train.lm.gz train.tok.gz train.pos.gz train.lemma.gz
+.PRECIOUS: random.sub.gz train.context.gz train.lm.gz train.tok.gz train.pos.gz \
+	train.lemma.gz
 
+#ANS=$(shell find eval/ -maxdepth 1 -name "*.ans" | sort)
+#topic-dist-rerun:
+	#for i in ${ANS}; do \
+		#c=`echo $$i | sed 's/.ans//g' | sed 's|eval/||g'`; \
+		#./hdp-topics-stat.py $$c.ans > eval/$$c.dist; \
+	#done

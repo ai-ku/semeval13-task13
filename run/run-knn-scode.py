@@ -18,7 +18,7 @@ option = "-k {} -d {} -p {}"
 # inputs
 words = sys.argv[1:]
 
-template = "zcat scode/{}.scode.gz  | grep -P '^0:' | cut -f3- | preinput-scode.py | dists {} | gzip > knn/scode/{}.knn.{}.gz & "
+template = "zcat scode_vec/{}.scode.gz  | grep -P '^0:' | cut -f3- | preinput-scode.py | dists {} | gzip > knn/scode/{}.knn.{}.gz & "
 #template = "zcat scode/{}.scode.gz  | grep -P '^0:' | cut -f3- | preinput-scode.py | gzip > dummy.gz & "
 
 for word in words:

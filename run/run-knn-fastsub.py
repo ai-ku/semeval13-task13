@@ -20,9 +20,9 @@ words = sys.argv[2:]
 
 template = "zcat {} | grep -P '^<{}\.\d{{1,3}}>' |  preinput.py | dists {} | gzip > knn/fastsub/{}.knn.{}.gz & \n "
 
-for word in words:
+for m in metrics:
     command = ""
-    for m in metrics:
+    for word in words:
         opt = option.format(k, m, ncpu)
         command += template.format(inp_file, word, opt, word, m)
     command += "wait"
