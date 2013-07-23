@@ -65,6 +65,7 @@ done
 # run hdp in parallel
 cd topicmodelling/
 ./run_hdp.sh $gamma $alpha
+exit
 #creating results
 ../run_create_res_files.sh
 cd ../

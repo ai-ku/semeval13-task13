@@ -20,7 +20,7 @@ keyfile = sys.argv[1]
 t = sys.argv[2]
 FILES=sys.argv[3:]
 
-K=5 #number of neighbor
+K=10 #number of neighbor
 
 
 out_file_dict = dd(lambda: False)

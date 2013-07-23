@@ -32,6 +32,9 @@ echo ---------------------
 ./run_hdp_args.py $max_iter $gamma_b $alpha_b $files | \
     xargs -n 14 -P $CPU ./hdp/hdp
 
+#output_dir=$output_dir/add.v
+#./hdp/hdp --algorithm train --data $output_dir/hdpdata.train.txt --directory $output_dir \
+    #--max_iter $max_iter --save_lag -1 --gamma_b $gamma_b --alpha_b $alpha_b --random_seed 1
 
 #count=0
 #for output_dir in $files
@@ -68,3 +71,4 @@ mv $output_dir/topics.txt.tmp $output_dir/topics.txt
 python hdp/CreateTopicWordProbPickle.py $output_dir/mode-topics.dat \
     $output_dir/vocabs.txt $output_dir/topics.pickle
 done
+exit

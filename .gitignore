@@ -36,6 +36,8 @@ nosetests.xml
 # Translations
 *.mo
 
+run/*.py[cod]
+
 # Mr Developer
 .mr.developer.cfg
 .project
@@ -44,4 +46,3 @@ run/hdp-wsi/wsi_output/*
 run/hdp-wsi/wsi_input/*
 run/hdp-wsi/topicmodelling/topicmodel_output/*
 run/*.err
-run/eval/*

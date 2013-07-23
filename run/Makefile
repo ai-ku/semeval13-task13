@@ -329,12 +329,12 @@ hdp.exp-gamma-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py eval/ ./nlp_utils.py
 
 ### KNN Calculations:
 
-knn-fastsub: target.sub.gz run-knn-fastsub.py
+knn-fastsub: target.sub.gz run-knn-fastsub.py # find the neighbors
 	-mkdir knn/fastsub
 	run-knn-fastsub.py $< ${TEST_WORDS} 2>$@.err
 	zcat knn/fastsub/*.gz | wc -l # sanity check: should be 23320
 
-knn-scode: run-knn-scode.py
+knn-scode: run-knn-scode.py # find the neighbors
 	-mkdir knn/scode
 	run-knn-scode.py ${TEST_WORDS} 2>$@.err
 	zcat knn/scode/*.gz | wc -l # sanity check: should be 18656
@@ -342,12 +342,12 @@ knn-scode: run-knn-scode.py
 # evaluate supervised upperbound of fastsub output
 UFASTSUB=$(shell find knn/fastsub/ -maxdepth 1 -name "*knn*.gz" | sort)
 fastsub.knn.upperbound: knn/fastsub
-	./calc_upperbound.py ${GOLD_ALL} fastsub ${UFASTSUB} #2>$@.err
+	./calc_upperbound.py ${GOLD_ALL} fastsub ${UFASTSUB} 2> >(tee $@.err >&2)
 
 # evaluate supervised upperbound of scode output (X side)
 USCODE=$(shell find knn/scode/ -maxdepth 1 -name "*knn*.gz" | sort)
 scode.knn.upperbound: knn/scode
-	./calc_upperbound.py ${GOLD_ALL} scode ${USCODE} #2>$@.err
+	./calc_upperbound.py ${GOLD_ALL} scode ${USCODE} 2> >(tee $@.err >&2)
 
 run-scode-no-enrich: pairs.100.gz
 	echo ${TEST_WORDS} | perl -lne 's/ |$$/.scode.gz /g; print' | xargs -n 1 -P 5 make

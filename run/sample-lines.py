@@ -13,7 +13,7 @@ tokens = []
 pos = []
 lemma = []
 for line0, line1, line2 in izip(gzip.open(sys.argv[3]), gzip.open(sys.argv[4]), gzip.open(sys.argv[5])):
-    if line0 == '' or line1 == '' or line2 == '': continue
+    if line0 == '\n' or line1 == '\n' or line2 == '\n': continue
     n += 1
     if len(tokens) < k:
         tokens.append(line0)

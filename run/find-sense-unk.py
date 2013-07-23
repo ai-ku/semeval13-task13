@@ -29,5 +29,5 @@ word = m.group(1)
 
 for instance, counts in sense_counts.iteritems():
     print "%s %s %s" % (word,
-                        instance,
-                        ' '.join(("%s%s/%d" % (word, x[0], x[1]) for x in counts.iteritems())))
+            instance,
+            ' '.join(("%s%s/%d" % (word, x[0], x[1]) for x in counts.iteritems())))

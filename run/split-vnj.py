@@ -12,14 +12,15 @@ for l, p in izip(gzip.open(sys.argv[1]), gzip.open(sys.argv[2])):
     assert(len(l) == len(p))
     for l, p in izip(l, p):
         lemma.append(l)
-        if p != 'NP' and p != 'NPS':
-            pos.append(p[0].lower())
+        if p.startswith('NP'): # NP,NPS: proper noun, pn plural, respectively
+            pos.append('x') 
         else:
-            pos.append('x')
+            pos.append(p[0].lower())
 
 write_to = [gzip.open("verb.sub.gz", 'w'),
             gzip.open("noun.sub.gz", 'w'),
             gzip.open("adj.sub.gz", 'w')]
+
 for line, l, p in izip(sys.stdin, lemma, pos):
     line = line.split("\t")
     line[0] = l + '.' + p
