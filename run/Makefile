@@ -29,6 +29,7 @@ GOLD_SINGLE=../test_data/keys/gold/all.singlesense.key
 # 	wait
 #	rm tok*.gz pos*.gz lemma*.gz
 
+
 tok1.gz tok2.gz tok3.gz tok4.gz tok5.gz pos1.gz pos2.gz pos3.gz pos4.gz pos5.gz lemma1.gz lemma2.gz lemma3.gz lemma4.gz lemma5.gz: ${TRAIN1} ${TRAIN2} ${TRAIN3} ${TRAIN4} ${TRAIN5}
 	zcat ${TRAIN1} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | ./extract-train.py 1 &\
 	zcat ${TRAIN2} | perl -pe 's/[^ -~\s]+/\<uni\>/g' | ./extract-train.py 2 &\
@@ -250,7 +251,6 @@ adj.pairs.100.gz: adj.sub.gz
 
 SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
 KM_OPTIONS=-k 32 -r 128 -l -w -v -s ${SEED}
-.SECONDARY:
 %.scode.gz: %.pairs.100.gz
 	zcat $< | scode -i 50 ${SC_OPTIONS} | gzip > $@
 
@@ -312,20 +312,27 @@ hdp-input-create: test.pairs.gz #target.sub.gz
 	python wordsub-collect.py $< ${SEED} ${NSAMPLE} ${TEST_WORDS}
 
 # alpha experiment
-hdp.exp-alpha-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py eval/ ./nlp_utils.py
+eval/hdp.exp-alpha-%.ans:
 	cd hdp-wsi/; ./run_wsi.sh 0.1 $*; wait
-	cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
-	cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
-	./hdp-topics-stat.py $@.ans > eval/$@.dist
+	cp hdp-wsi/wsi_output/tm_wsi $@
+	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-alpha-$*.topics
+	./hdp-topics-stat.py $@ > eval/hdp.exp-alpha-$*.dist
 	wait
 
-# gamma experiment
-hdp.exp-gamma-%: hdp-wsi/run_wsi.sh ./hdp-topics-stat.py eval/ ./nlp_utils.py
+## gamma experiment
+eval/hdp.exp-gamma-%.ans:
 	cd hdp-wsi/; ./run_wsi.sh $* 1; wait
-	cp hdp-wsi/wsi_output/tm_wsi eval/$@.ans
-	cp hdp-wsi/wsi_output/tm_wsi.topics eval/$@.topics
-	./hdp-topics-stat.py $@.ans > eval/$@.dist
+	cp hdp-wsi/wsi_output/tm_wsi $@
+	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-gamma-$*.topics
+	./hdp-topics-stat.py $@ > eval/hdp.exp-gamma-$*.topics
 	wait
+
+hdp-input-stats.tab:
+	for tw in ${TEST_WORDS}; do\
+		cat input-hdp-test/$$tw.lemma  | awk '{print $$0 "<sentence>"}' |\
+		../bin/tree-tagger/cmd/tree-tagger-english | ./hdp-vocab-stat.py $$tw >> $@;\
+		wait;\
+	done
 
 ### KNN Calculations:
 
@@ -355,19 +362,23 @@ run-scode-no-enrich: pairs.100.gz
 
 ### Evaluation ###
 EVAL=../test_data/scoring/
-eval.%: eval/%.ans
+#eval.%: eval/%.ans
+eval/%.scores: eval/%.ans
 	java -jar ${EVAL}jaccard-index.jar ${GOLD_ALL} $< > eval/$*.sup.ji.eval
 	java -jar ${EVAL}positional-tau.jar ${GOLD_ALL} $< > eval/$*.sup.pt.eval
 	java -jar ${EVAL}weighted-ndcg.jar ${GOLD_ALL} $< > eval/$*.sup.wndcg.eval
 	java -jar ${EVAL}single-sense-precision.jar -s ${GOLD_SINGLE} $< > eval/$*.sup.ssp.eval
 	java -jar ${EVAL}fuzzy-bcubed.jar ${GOLD_ALL} $< > eval/$*.un.fb.eval
 	java -jar ${EVAL}fuzzy-nmi.jar ${GOLD_ALL} $< > eval/$*.un.fnmi.eval
-	tail -n 2 eval/$*.*.eval > eval/$*.scores
-	cat eval/$*.scores
+	tail -n 2 eval/$*.*.eval > $@
+	cat $@
 	rm -rf eval/*.eval
 
 .PRECIOUS: random.sub.gz train.context.gz train.lm.gz train.tok.gz train.pos.gz \
 	train.lemma.gz
+.SECONDARY:
+
+#.DELETE_ON_ERROR: global.sub*.gz
 
 #ANS=$(shell find eval/ -maxdepth 1 -name "*.ans" | sort)
 #topic-dist-rerun:

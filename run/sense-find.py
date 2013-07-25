@@ -28,7 +28,7 @@ for word in sense_word_counts.keys():
     sense_counts = sense_word_counts[word]
     for instance, counts in sense_counts.iteritems():
         print "%s %s %s" % (word,
-                            word + '.' + instance,
-                            ' '.join(("%s.%s/%d" % (word, x[0], x[1]) for x in counts.iteritems())))
+                word + '.' + instance,
+                ' '.join(("%s.%s/%d" % (word, x[0], x[1]) for x in counts.iteritems())))
 
 

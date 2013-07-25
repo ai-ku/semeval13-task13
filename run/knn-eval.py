@@ -107,7 +107,8 @@ def eval_knn(source, gold_file, inst_file, k, is_weighted):
         pred_senses = calc_sense(dsense, neighbors, weights)
         # for printing: sense1/4
         strf = "{}/{} " * (len(pred_senses) / 2)
-        print curr_inst, strf.format(*pred_senses)
+        #FIXME line[0] dogru olmayabilir check et.
+        print line[0], curr_inst, strf.format(*pred_senses)
 
 def main():
 

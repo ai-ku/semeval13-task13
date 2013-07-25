@@ -6,10 +6,8 @@ import sys
 import re
 from nlp_utils import calc_perp_semeval
 
-PATH="eval/"
-
 filename = sys.argv[1]
-f = open(PATH + filename)
+f = open(filename)
 
 target_words = set()
 lines = f.readlines()
