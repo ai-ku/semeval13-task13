@@ -4,10 +4,18 @@ from __future__ import division
 import math
 from collections import defaultdict as dd
 from itertools import izip
+import gzip
 
 __author__ = "Osman Baskaya"
 
 """ Utility functions that are used in experiments """
+
+def fopen(filename):
+    if filename.endswith('.gz'):
+        func = gzip.open
+    else:
+        func = open
+    return func(filename)
 
 
 def calc_perp(X, weight=None):

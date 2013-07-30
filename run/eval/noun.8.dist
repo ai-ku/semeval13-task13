@@ -1,0 +1,24 @@
+board.n 8
+book.n 8
+color.n 8
+control.n 8
+date.n 8
+family.n 8
+force.n 8
+image.n 8
+life.n 8
+number.n 8
+paper.n 8
+part.n 8
+people.n 8
+power.n 8
+sight.n 8
+sound.n 8
+state.n 8
+trace.n 8
+way.n 8
+window.n 8
+-----
+Avg. senses:	8.0
+Avg. # of s for inst	5.35227272727
+Avg. perp	5.65480519999

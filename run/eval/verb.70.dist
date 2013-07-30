@@ -1,0 +1,24 @@
+add.v 70
+appear.v 70
+ask.v 70
+become.v 69
+book.v 66
+dismiss.v 69
+find.v 70
+help.v 70
+live.v 70
+lose.v 70
+meet.v 70
+read.v 70
+serve.v 70
+strike.v 70
+suggest.v 70
+trace.v 68
+transfer.v 69
+wait.v 70
+win.v 70
+write.v 70
+-----
+Avg. senses:	69.55
+Avg. # of s for inst	15.2327586207
+Avg. perp	41.5497028566

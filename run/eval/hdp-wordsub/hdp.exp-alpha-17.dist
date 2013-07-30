@@ -1,0 +1,54 @@
+add.v 29
+appear.v 33
+ask.v 28
+become.v 26
+board.n 46
+book.n 39
+book.v 19
+color.n 44
+common.j 30
+control.n 43
+dark.j 47
+date.n 45
+dismiss.v 35
+familiar.j 36
+family.n 39
+find.v 28
+force.n 41
+help.v 29
+image.n 42
+late.j 35
+life.n 43
+live.v 33
+lose.v 30
+meet.v 29
+new.j 41
+number.n 41
+paper.n 43
+part.n 34
+people.n 39
+poor.j 35
+power.n 40
+read.v 36
+serious.j 47
+serve.v 33
+severe.j 36
+sight.n 37
+sound.n 35
+state.n 42
+strike.v 40
+strong.j 41
+suggest.v 30
+trace.n 23
+trace.v 31
+transfer.v 33
+wait.v 38
+warm.j 42
+way.n 42
+win.v 34
+window.n 45
+write.v 42
+-----
+Avg. senses:	36.58
+Avg. # of s for inst	3.78963795256
+Avg. perp	17.4515354687

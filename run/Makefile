@@ -134,15 +134,11 @@ pairs.100.gz: target.sub.gz
 	#perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
 
 SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
- #KM_OPTIONS=-k 7 -r 128 -l -w -v -s ${SEED}
-
 # example: add.v.scode.gz
 # caution: no instance enrichment will be made ({1,3})
 %.scode.gz: pairs.100.gz
 	 zcat $< | grep -P '^<$*\.\d{1,3}>' | scode -i 50 ${SC_OPTIONS} | gzip > scode_vec/$@
 
-all.%.scode.gz: pairs.100.gz
-	 zcat $< | grep -P '^<$*' | scode -i 50 ${SC_OPTIONS} | gzip > $@
 
 # %.kmeans.gz: %.scode.gz
 # 	zcat $< | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} | gzip > $@
@@ -210,6 +206,30 @@ x+y-gold-cluster.key: pairs.100.gz
 x+y-7-cluster.key: pairs.100.gz
 	x+y-cluster.pl ${SEED} 7 > $@
 
+
+KM_OPTIONS=-k 32 -r 128 -l -w -v -s ${SEED}
+%.kmeans.gz: %.scode.gz
+	zcat $< | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} | gzip > $@
+
+#%.all.key: %.all.pairs.100.gz %.all.kmeans.gz pos-find-sense.py
+	## adj.all.key, noun.all.key, verb.all.key
+	#zcat $< | grep -P "^<\w+\.\w+\.\d+>" | ./pos-find-sense.py $*.all.kmeans.gz > $@
+
+out3.key: pairs.100.gz
+	zcat $< | grep -P '^<add.v.[^\d]' | find-sense-unk.py verb.kmeans.gz > $@
+	zcat $< | grep -P '^<ask.v.[^\d]' | find-sense-unk.py verb.kmeans.gz >> $@
+	zcat $< | grep -P '^<win.v.[^\d]' | find-sense-unk.py verb.kmeans.gz >> $@
+	zcat $< | grep -P '^<argument.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
+	zcat $< | grep -P '^<interest.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
+	zcat $< | grep -P '^<paper.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
+	zcat $< | grep -P '^<different.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
+	zcat $< | grep -P '^<important.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
+
+eval/y-%-cluster-test.ans: pairs.100.gz
+	y-cluster-test.pl ${SEED} $* > $@
+
+### POS-based Experiments ###
+
 sampled.tok1.gz sampled.pos1.gz: tok1.gz pos1.gz lemma1.gz sample-lines.py
 	./sample-lines.py ${SEED} 120000 tok1.gz pos1.gz lemma1.gz
 
@@ -240,67 +260,34 @@ global.sub.gz: global.sub1.gz global.sub2.gz global.sub3.gz global.sub4.gz globa
 verb.sub.gz noun.sub.gz adj.sub.gz: global.sub.gz
 	zcat $< | ./split-vnj.py sampled.lemma1.gz sampled.pos1.gz
 
-verb.pairs.100.gz: verb.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+verb.pairs.100.gz: verb.sub.gz pairs.100.gz
+	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} > $@.tmp
+	zcat pairs.100.gz | grep -P "^<\w+\.v\.\d{1,3}>" >> $@.tmp
+	cat $@.tmp | gzip > $@
+	rm -rf $@.tmp
 
-noun.pairs.100.gz: noun.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+noun.pairs.100.gz: noun.sub.gz pairs.100.gz
+	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} > $@.tmp
+	zcat pairs.100.gz | grep -P "^<\w+\.n\.\d{1,3}>" >> $@.tmp
+	cat $@.tmp | gzip > $@
+	rm -rf $@.tmp
 
-adj.pairs.100.gz: adj.sub.gz
-	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} | gzip > $@
+adj.pairs.100.gz: adj.sub.gz pairs.100.gz
+	perl -le 'print "$<" for 1..100' | xargs zcat | wordsub -s ${SEED} > $@.tmp
+	zcat pairs.100.gz | grep -P "^<\w+\.j\.\d{1,3}>" >> $@.tmp
+	cat $@.tmp | gzip > $@
+	rm -rf $@.tmp
 
-SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
-KM_OPTIONS=-k 32 -r 128 -l -w -v -s ${SEED}
-%.scode.gz: %.pairs.100.gz
+%.scode.pos.gz: %.pairs.100.gz
 	zcat $< | scode -i 50 ${SC_OPTIONS} | gzip > $@
 
-# k=100	total	100	90.71
-# k=200	total	200	91.09
-# k=400	total	400	91.23
-%.kmeans.gz: %.scode.gz
-	zcat $< | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} | gzip > $@
+pos-cluster-test: adj.scode.pos.gz noun.scode.pos.gz verb.scode.pos.gz
+	./y-cluster-pos-test.py ${SEED} 4 8 16 24 32 40 60 70 80 100 120 150 180 210 240 270
 
-%.all.key: %.all.pairs.100.gz %.all.kmeans.gz sense-find.py
-	# adj.all.key, noun.all.key, verb.all.key
-	zcat $< | grep -P "^<\w+\.\w+\.\d+>" | ./sense-find.py $*.all.kmeans.gz > $@
+eval/pos.%.ans: eval/noun.%.ans eval/adj.%.ans eval/verb.%.ans
+	cat $^ > $@
+	wc $@
 
-out3.key: pairs.100.gz
-	zcat $< | grep -P '^<add.v.[^\d]' | find-sense-unk.py verb.kmeans.gz > $@
-	zcat $< | grep -P '^<ask.v.[^\d]' | find-sense-unk.py verb.kmeans.gz >> $@
-	zcat $< | grep -P '^<win.v.[^\d]' | find-sense-unk.py verb.kmeans.gz >> $@
-	zcat $< | grep -P '^<argument.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
-	zcat $< | grep -P '^<interest.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
-	zcat $< | grep -P '^<paper.n.[^\d]' | find-sense-unk.py noun.kmeans.gz >> $@
-	zcat $< | grep -P '^<different.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
-	zcat $< | grep -P '^<important.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
-
-y-%-cluster-test.key: pairs.100.gz
-	y-cluster-test.pl ${SEED} $* > $@
-
-pos-cluster-test: adj.all.scode.gz noun.all.scode.gz verb.all.scode.gz
-	-mkdir kmeans
-	-mkdir keys
-	./y-cluster-pos-test.py ${SEED} 32 64 128 256
-
-#variance test:
-%.var:
-	./variance.pl $* > $@
-
-%.var.plot-context: %.var
-	./var-prep-plot-context.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
-
-# context-based variance test
-pos.variance.test-context: noun.var.plot-context verb.var.plot-context adj.var.plot-context
-	tar -cvf var-test.context.tar *.var.plot-context
-	mv var-test.context.tar ~
-
-%.var.plot-word: %.var
-	./var-prep-plot-word.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
-
-# word-based variance test
-pos.variance.test-word: noun.var.plot-word verb.var.plot-word adj.var.plot-word
-	tar -cvf var-test.word.tar *.var.plot-word
-	mv var-test.word.tar ~
 
 ### HDP Experiments ###
 test.pairs.gz: #pairs.100.gz
@@ -311,12 +298,19 @@ NSAMPLE=1000
 hdp-input-create: test.pairs.gz #target.sub.gz
 	python wordsub-collect.py $< ${SEED} ${NSAMPLE} ${TEST_WORDS}
 
+hdp-input-random-create: 
+	cat input-hdp-test/* | tr ' ' '\n' | sort | uniq > vocab.tmp
+	for fname in ${TEST_WORDS}; do\
+		cat input-hdp-test/$$fname.lemma | hdp-input-randomize.py vocab.tmp \
+		> input-hdp-random3-test/$$fname.lemma; \
+	done
+	rm vocab.tmp
+
 # alpha experiment
 eval/hdp.exp-alpha-%.ans:
 	cd hdp-wsi/; ./run_wsi.sh 0.1 $*; wait
 	cp hdp-wsi/wsi_output/tm_wsi $@
 	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-alpha-$*.topics
-	./hdp-topics-stat.py $@ > eval/hdp.exp-alpha-$*.dist
 	wait
 
 ## gamma experiment
@@ -324,7 +318,13 @@ eval/hdp.exp-gamma-%.ans:
 	cd hdp-wsi/; ./run_wsi.sh $* 1; wait
 	cp hdp-wsi/wsi_output/tm_wsi $@
 	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-gamma-$*.topics
-	./hdp-topics-stat.py $@ > eval/hdp.exp-gamma-$*.topics
+	wait
+
+# alpha experiment with random input
+eval/hdp.exp.random3-alpha-%.ans:
+	cd hdp-wsi/; ./run_wsi.sh 0.1 $*; wait
+	cp hdp-wsi/wsi_output/tm_wsi $@
+	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-alpha-$*.topics
 	wait
 
 hdp-input-stats.tab:
@@ -372,6 +372,8 @@ eval/%.scores: eval/%.ans
 	java -jar ${EVAL}fuzzy-nmi.jar ${GOLD_ALL} $< > eval/$*.un.fnmi.eval
 	tail -n 2 eval/$*.*.eval > $@
 	cat $@
+	./topics-stat.py $< > eval/$*.dist
+	tail -3 eval/$*.dist
 	rm -rf eval/*.eval
 
 .PRECIOUS: random.sub.gz train.context.gz train.lm.gz train.tok.gz train.pos.gz \
@@ -386,3 +388,24 @@ eval/%.scores: eval/%.ans
 		#c=`echo $$i | sed 's/.ans//g' | sed 's|eval/||g'`; \
 		#./hdp-topics-stat.py $$c.ans > eval/$$c.dist; \
 	#done
+
+
+### Variance tests:
+#%.var:
+	#./variance.pl $* > $@
+
+#%.var.plot-context: %.var
+	#./var-prep-plot-context.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
+
+## context-based variance test
+#pos.variance.test-context: noun.var.plot-context verb.var.plot-context adj.var.plot-context
+	#tar -cvf var-test.context.tar *.var.plot-context
+	#mv var-test.context.tar ~
+
+#%.var.plot-word: %.var
+	#./var-prep-plot-word.py $* /scratch/1/obaskaya/task13/test_data/keys/gold > $@
+
+## word-based variance test
+#pos.variance.test-word: noun.var.plot-word verb.var.plot-word adj.var.plot-word
+	#tar -cvf var-test.word.tar *.var.plot-word
+	#mv var-test.word.tar ~

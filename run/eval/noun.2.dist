@@ -1,0 +1,24 @@
+board.n 2
+book.n 2
+color.n 2
+control.n 2
+date.n 2
+family.n 2
+force.n 2
+image.n 2
+life.n 2
+number.n 2
+paper.n 2
+part.n 2
+people.n 2
+power.n 2
+sight.n 2
+sound.n 2
+state.n 2
+trace.n 2
+way.n 2
+window.n 2
+-----
+Avg. senses:	2.0
+Avg. # of s for inst	1.89393939394
+Avg. perp	1.75268825489

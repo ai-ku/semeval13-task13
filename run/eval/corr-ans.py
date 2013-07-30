@@ -4,6 +4,8 @@
 __author__ = "Osman Baskaya"
 import sys
 
+""" some answer file does not have three column. This is a correction code """
+
 files=sys.argv[1].split()
 
 

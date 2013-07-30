@@ -9,6 +9,10 @@ import gzip
 import random
 
 
+"""
+Create input for HDP
+"""
+
 test_pairs = gzip.open(sys.argv[1]).read()
 seed = int(sys.argv[2])
 random.seed(seed)

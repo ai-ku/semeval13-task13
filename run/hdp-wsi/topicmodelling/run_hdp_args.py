@@ -9,7 +9,6 @@ gamma_b = sys.argv[2]
 alpha_b = sys.argv[3]
 seed = sys.argv[4]
 
-
 files = sys.argv[5:]
 
 tfile = '/hdpdata.train.txt' #training file

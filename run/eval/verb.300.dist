@@ -1,0 +1,24 @@
+add.v 283
+appear.v 274
+ask.v 271
+become.v 265
+book.v 197
+dismiss.v 280
+find.v 275
+help.v 278
+live.v 278
+lose.v 287
+meet.v 280
+read.v 281
+serve.v 282
+strike.v 286
+suggest.v 270
+trace.v 269
+transfer.v 278
+wait.v 273
+win.v 281
+write.v 282
+-----
+Avg. senses:	273.5
+Avg. # of s for inst	20.7780172414
+Avg. perp	106.76437998

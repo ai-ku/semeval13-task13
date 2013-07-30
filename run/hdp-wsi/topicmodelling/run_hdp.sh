@@ -12,8 +12,8 @@ stopword_file="stopwords.txt"
 #minimum vocab frequency to filter
 voc_minfreq=0
 max_iter=1000
-#CPU=25
-CPU=1
+CPU=50
+SEED=1
 
 #run hdp
 #compile the code
@@ -28,9 +28,8 @@ echo ---------------------
 echo Number of files: $num_files
 echo ---------------------
 
-
 # parameter details for hdp are in run_hdp_args.py
-./run_hdp_args.py $max_iter $gamma_b $alpha_b $files | \
+./run_hdp_args.py $max_iter $gamma_b $alpha_b $SEED $files | \
     xargs -n 16 -P $CPU ./hdp/hdp
 
 #output_dir=$output_dir/add.v
