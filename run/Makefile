@@ -225,7 +225,7 @@ out3.key: pairs.100.gz
 	zcat $< | grep -P '^<different.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
 	zcat $< | grep -P '^<important.a.[^\d]' | find-sense-unk.py adj.kmeans.gz >> $@
 
-eval/y-%-cluster-test.ans: pairs.100.gz
+eval/y-%-cluster.ans: pairs.100.gz
 	y-cluster-test.pl ${SEED} $* > $@
 
 ### POS-based Experiments ###
@@ -302,7 +302,7 @@ hdp-input-random-create:
 	cat input-hdp-test/* | tr ' ' '\n' | sort | uniq > vocab.tmp
 	for fname in ${TEST_WORDS}; do\
 		cat input-hdp-test/$$fname.lemma | hdp-input-randomize.py vocab.tmp \
-		> input-hdp-random3-test/$$fname.lemma; \
+		> input-hdp-random2-test/$$fname.lemma; \
 	done
 	rm vocab.tmp
 
@@ -321,7 +321,7 @@ eval/hdp.exp-gamma-%.ans:
 	wait
 
 # alpha experiment with random input
-eval/hdp.exp.random3-alpha-%.ans:
+eval/hdp.exp.random2-alpha-%.ans:
 	cd hdp-wsi/; ./run_wsi.sh 0.1 $*; wait
 	cp hdp-wsi/wsi_output/tm_wsi $@
 	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-alpha-$*.topics
@@ -360,6 +360,17 @@ run-scode-no-enrich: pairs.100.gz
 	echo ${TEST_WORDS} | perl -lne 's/ |$$/.scode.gz /g; print' | xargs -n 1 -P 5 make
 	zcat scode_vec/*.gz | grep -P '^0:' | wc -l # sanity check: should be 4664
 
+### METRIC EXPERIMENTS ###
+# rand-ans-generate.py induced/not_induced k_val key_file_for_instance_column
+eval/random%.wn.ans:
+	rand-ans-generate.py 0 $* ${GOLD_ALL} > $@
+
+eval/random%.induced.ans:
+	rand-ans-generate.py 1 $* ${GOLD_ALL} > $@
+
+compare-wn-induced:
+	compare-wn-induced.py ${GOLD_ALL}
+
 ### Evaluation ###
 EVAL=../test_data/scoring/
 #eval.%: eval/%.ans
@@ -369,12 +380,12 @@ eval/%.scores: eval/%.ans
 	java -jar ${EVAL}weighted-ndcg.jar ${GOLD_ALL} $< > eval/$*.sup.wndcg.eval
 	java -jar ${EVAL}single-sense-precision.jar -s ${GOLD_SINGLE} $< > eval/$*.sup.ssp.eval
 	java -jar ${EVAL}fuzzy-bcubed.jar ${GOLD_ALL} $< > eval/$*.un.fb.eval
-	java -jar ${EVAL}fuzzy-nmi.jar ${GOLD_ALL} $< > eval/$*.un.fnmi.eval
+	java -jar ${EVAL}fuzzy-nmi.jar  ${GOLD_ALL} $< > eval/$*.un.fnmi.eval
 	tail -n 2 eval/$*.*.eval > $@
+	rm -rf eval/*.eval
 	cat $@
 	./topics-stat.py $< > eval/$*.dist
 	tail -3 eval/$*.dist
-	rm -rf eval/*.eval
 
 .PRECIOUS: random.sub.gz train.context.gz train.lm.gz train.tok.gz train.pos.gz \
 	train.lemma.gz

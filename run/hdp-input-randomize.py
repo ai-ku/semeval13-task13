@@ -18,33 +18,33 @@ vocab = list(set(fopen(sys.argv[1]).readlines())) # for uniqueness
 d = dd(lambda: None)
 
 # random 1
-replacement = False
-for line in sys.stdin:
-    line = line.split()
-    newline = []
-    #if replacement: # process restarts in every new line
-        #d = dd(lambda: None)
-    for word in line:
-        if d[word] is None:
-            r = randint(0, len(vocab) - 1)
-            d[word] = vocab.pop(r).strip()
-        newline.append(d[word])
-    print ' '.join(newline)
-
-
-# random 2: 
-#replacement = True
+#replacement = False
 #for line in sys.stdin:
     #line = line.split()
     #newline = []
-    #if replacement: # process restarts in every new line
-        #d = dd(lambda: None)
+    ##if replacement: # process restarts in every new line
+        ##d = dd(lambda: None)
     #for word in line:
         #if d[word] is None:
             #r = randint(0, len(vocab) - 1)
-            #d[word] = vocab[r].strip()
+            #d[word] = vocab.pop(r).strip()
         #newline.append(d[word])
     #print ' '.join(newline)
+
+
+# random 2: 
+replacement = True
+for line in sys.stdin:
+    line = line.split()
+    newline = []
+    if replacement: # process restarts in every new line
+        d = dd(lambda: None)
+    for word in line:
+        if d[word] is None:
+            r = randint(0, len(vocab) - 1)
+            d[word] = vocab[r].strip()
+        newline.append(d[word])
+    print ' '.join(newline)
 
 
 # random 3: everything is random

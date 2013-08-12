@@ -6,7 +6,7 @@ import sys
 
 # from .scores file
 #metrics = {'ji': 2, 'pt': 6, 'ssp': 10, 'wndcg': 14, 'fb': 18, 'fnmi': 22}
-metrics = [2, 6, 10, 14, 18, 22]
+metrics = [10, 2, 6, 14, 18, 22]
 
 #from .dist file (topic distribution)
 #distr = {'avgs': 52, 'avgsinst': 53, 'avgperp': 54}

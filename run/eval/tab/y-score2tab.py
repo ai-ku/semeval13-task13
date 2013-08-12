@@ -21,14 +21,14 @@ for fn in sys.stdin: # ls *.scores
     print >> sys.stderr, fn
     scores = open(fn).readlines()
     stats = open(exp + '.dist').readlines()
-    param, val =  exp.split('-')[1:]
+    val = exp.split('-')[1]
     line = "%s\t" % val
     line += "\t".join([scores[m-1].split()[-1] for m in metrics])
     line += '\t'
     line += "\t".join([stats[s-1].split()[-1] for s in distr])
     print_arr.append(line)
 
-print_arr.sort(key=lambda x: float(x.split()[0]))
+print_arr.sort(key=lambda x: int(x.split()[0]))
 print '\n'.join(print_arr)
 
 #hdp_files = fastsub_file = pos_file = scode_file = None
@@ -44,6 +44,10 @@ print '\n'.join(print_arr)
             #f = hdp_files[0]
         #elif param == 'gamma':
             #f = hdp_files[1]
+        #line = "%s\t" % val
+        #line += "\t".join([scores[m-1].split()[-1] for m in metrics])
+        #line += '\t'
+        #line += "\t".join([stats[s-1].split()[-1] for s in distr])
         #f.write(line)
         #f.write('\n')
     #elif exp.startswith('scode') or exp.startswith('fastsub'):
