@@ -33,18 +33,18 @@ d = dd(lambda: None)
 
 
 # random 2: 
-replacement = True
-for line in sys.stdin:
-    line = line.split()
-    newline = []
-    if replacement: # process restarts in every new line
-        d = dd(lambda: None)
-    for word in line:
-        if d[word] is None:
-            r = randint(0, len(vocab) - 1)
-            d[word] = vocab[r].strip()
-        newline.append(d[word])
-    print ' '.join(newline)
+#replacement = True
+#for line in sys.stdin:
+    #line = line.split()
+    #newline = []
+    #if replacement: # process restarts in every new line
+        #d = dd(lambda: None)
+    #for word in line:
+        #if d[word] is None:
+            #r = randint(0, len(vocab) - 1)
+            #d[word] = vocab[r].strip()
+        #newline.append(d[word])
+    #print ' '.join(newline)
 
 
 # random 3: everything is random
@@ -56,3 +56,11 @@ for line in sys.stdin:
         #word = vocab[r].strip()
         #newline.append(word)
     #print ' '.join(newline)
+
+# random 4: each row consists only one word type
+for line in sys.stdin:
+    line = line.split()
+    r = randint(0, len(vocab) - 1)
+    w = vocab[r].strip()
+    print ' '.join([w] * len(line))
+

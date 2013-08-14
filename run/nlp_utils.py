@@ -40,8 +40,12 @@ def calc_perp_semeval(sense_list):
     weight = []
     for slist in sense_list:
         m = [s.split('/') for s in slist]
-        senses.extend([t[0] for t in m])
-        weight.extend([float(t[1]) for t in m])
+        for t in m:
+            senses.append(t[0])
+            if len(t) == 1:
+                weight.append(1.)
+            else:
+                weight.append(float(t[1]))
 
     assert len(senses) == len(weight)
     return calc_perp(senses, weight)

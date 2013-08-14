@@ -302,7 +302,7 @@ hdp-input-random-create:
 	cat input-hdp-test/* | tr ' ' '\n' | sort | uniq > vocab.tmp
 	for fname in ${TEST_WORDS}; do\
 		cat input-hdp-test/$$fname.lemma | hdp-input-randomize.py vocab.tmp \
-		> input-hdp-random2-test/$$fname.lemma; \
+		> input-hdp-random4-test/$$fname.lemma; \
 	done
 	rm vocab.tmp
 
@@ -320,12 +320,16 @@ eval/hdp.exp-gamma-%.ans:
 	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-gamma-$*.topics
 	wait
 
-# alpha experiment with random input
-eval/hdp.exp.random2-alpha-%.ans:
-	cd hdp-wsi/; ./run_wsi.sh 0.1 $*; wait
+# experiment with random input
+eval/hdp.exp.random%.ans:
+	rm hdp-wsi/wsi_input/example/all
+	ln -s `pwd`/input-hdp-random$*-test hdp-wsi/wsi_input/example/all
+	cd hdp-wsi/; ./run_wsi.sh 0.1 1; wait
 	cp hdp-wsi/wsi_output/tm_wsi $@
 	cp hdp-wsi/wsi_output/tm_wsi.topics eval/hdp.exp-alpha-$*.topics
 	wait
+	rm hdp-wsi/wsi_input/example/all
+	ln -s `pwd`/input-hdp-test hdp-wsi/wsi_input/example/all
 
 hdp-input-stats.tab:
 	for tw in ${TEST_WORDS}; do\
@@ -363,10 +367,13 @@ run-scode-no-enrich: pairs.100.gz
 ### METRIC EXPERIMENTS ###
 # rand-ans-generate.py induced/not_induced k_val key_file_for_instance_column
 eval/random%.wn.ans:
-	rand-ans-generate.py 0 $* ${GOLD_ALL} > $@
+	rand-ans-generate.py 1 $* ${GOLD_ALL} > $@ # 1 for wn
 
 eval/random%.induced.ans:
-	rand-ans-generate.py 1 $* ${GOLD_ALL} > $@
+	rand-ans-generate.py 0 $* ${GOLD_ALL} > $@ # 0 for induced
+
+eval/1inst1sense.ans:
+	rand-ans-generate.py 2 0 ${GOLD_ALL} > $@ # 2 for 1inst1sense
 
 compare-wn-induced:
 	compare-wn-induced.py ${GOLD_ALL}
@@ -381,6 +388,7 @@ eval/%.scores: eval/%.ans
 	java -jar ${EVAL}single-sense-precision.jar -s ${GOLD_SINGLE} $< > eval/$*.sup.ssp.eval
 	java -jar ${EVAL}fuzzy-bcubed.jar ${GOLD_ALL} $< > eval/$*.un.fb.eval
 	java -jar ${EVAL}fuzzy-nmi.jar  ${GOLD_ALL} $< > eval/$*.un.fnmi.eval
+	java -jar ${EVAL}vmeasure.jar $< ${GOLD_ALL} all > eval/$*.un.vm.eval
 	tail -n 2 eval/$*.*.eval > $@
 	rm -rf eval/*.eval
 	cat $@
