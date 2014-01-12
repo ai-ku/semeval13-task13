@@ -8,7 +8,8 @@ Please see the file [LICENSE](https://github.com/ai-ku/task13/blob/master/LICENS
 
 ### Paper:
 
-Baskaya, O., Sert, E., Cirik, V., and Yuret, D. (2013). AI-KU: Using Substitute Vectors and Co-Occurrence Modeling for Word Sense Induction and Disambiguation. newdesign.aclweb.org, 2(SemEval), 300–306. Retrieved from http://aclweb.org/anthology//S/S13/S13-2050.pdf
+Baskaya, Osman and Sert, Enis and Cirik, Volkan and Yuret, Deniz. Second Joint Conference on Lexical and Computational Semantics (*SEM), Volume 2: Proceedings of the Seventh International Workshop on Semantic Evaluation (SemEval 2013). June, 2013. Atlanta, Georgia, USA. 
+Retrieved from http://aclweb.org/anthology//S/S13/S13-2050.pdf
 
 
 ### DIRECTORY STRUCTURE:
