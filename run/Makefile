@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 SRILM_PATH=/opt/srilm/bin/i686-m64
-export PATH := .:${PATH}:/work/_upos_new/bin:${SRILM_PATH}
+export PATH := .:${PATH}:../bin:${SRILM_PATH}
 
 TRAIN1=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -5 | tail -5)
 TRAIN2=$(shell ls ../data/UKWAC-* | sort -k 2 -t - -n | head -10 | tail -5)
@@ -65,30 +65,30 @@ test.tok.gz: extract-test.py
 	extract-test.py ${TEST} | gzip > $@
 
 trial.ppl.gz: train.lm.gz trial.tok.gz
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
+	PATH=../src/tree-tagger/cmd:../src/tree-tagger/bin:$$PATH;\
 	zcat trial.tok.gz | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
+	../src/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
 	ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
 
 test.ppl.gz: train.lm.gz test.tok.gz
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
+	PATH=../src/tree-tagger/cmd:../src/tree-tagger/bin:$$PATH;\
 	zcat test.tok.gz | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
+	../src/tree-tagger/cmd/tree-tagger-english | token2sent.py |\
 	ngram -order ${LM_NGRAM} -unk -lm $< -ppl - -debug 2 | gzip > $@
 
 train.context.gz: train.tok.gz train.pos.gz train.lemma.gz
 	./extract-train-context.py $^ ${TEST} ${TRIAL_WORDS} | gzip > $@
 
 trial.context.gz: ./extract-trial-context.py
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
+	PATH=../src/tree-tagger/cmd:../src/tree-tagger/bin:$$PATH;\
 	./extract-trial-context.py ${TRIAL} | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | ./token2sent.py |\
+	../src/tree-tagger/cmd/tree-tagger-english | ./token2sent.py |\
 	./merge-left-right-context.py | gzip > $@
 
 test.context.gz: extract-test-context.py
-	PATH=../bin/tree-tagger/cmd:../bin/tree-tagger/bin:$$PATH;\
+	PATH=../src/tree-tagger/cmd:../src/tree-tagger/bin:$$PATH;\
 	./extract-test-context.py ${TEST} | awk '{print $$0, "</s>"}' |\
-	../bin/tree-tagger/cmd/tree-tagger-english | ./token2sent.py |\
+	../src/tree-tagger/cmd/tree-tagger-english | ./token2sent.py |\
 	./merge-left-right-context.py | gzip > $@
 
 random.context.gz: train.context.gz
@@ -137,7 +137,7 @@ SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
 # example: add.v.scode.gz
 # caution: no instance enrichment will be made ({1,3})
 %.scode.gz: pairs.100.gz
-	 zcat $< | grep -P '^<$*\.\d{1,3}>' | scode -i 50 ${SC_OPTIONS} | gzip > scode_vec/$@
+	 zcat $< | grep -P '^<$*\.\d{1,3}>' | scode ${SC_OPTIONS} | gzip > scode_vec/$@
 
 
 # %.kmeans.gz: %.scode.gz
@@ -151,14 +151,14 @@ SC_OPTIONS=-a -r 1 -d 25 -z 0.166 -p 50 -u 0.2 -s ${SEED} -v
 
 KM_OPTIONS=-r 128 -l -w -v -s ${SEED}
 out2.key: pairs.100.gz
-	zcat $< | grep -P '^<add.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 6 | gzip > km1.gz &\
-	zcat $< | grep -P '^<ask.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km2.gz &\
-	zcat $< | grep -P '^<win.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 4 | gzip > km3.gz &\
-	zcat $< | grep -P '^<argument.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km4.gz &\
-	zcat $< | grep -P '^<interest.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km5.gz &\
-	zcat $< | grep -P '^<paper.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km6.gz &\
-	zcat $< | grep -P '^<different.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km7.gz &\
-	zcat $< | grep -P '^<important.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km8.gz &\
+	zcat $< | grep -P '^<add.v' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 6 | gzip > km1.gz &\
+	zcat $< | grep -P '^<ask.v' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km2.gz &\
+	zcat $< | grep -P '^<win.v' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 4 | gzip > km3.gz &\
+	zcat $< | grep -P '^<argument.n' | scode ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km4.gz &\
+	zcat $< | grep -P '^<interest.n' | scode ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km5.gz &\
+	zcat $< | grep -P '^<paper.n' | scode ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km6.gz &\
+	zcat $< | grep -P '^<different.[aj]' |scode ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km7.gz &\
+	zcat $< | grep -P '^<important.[aj]' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^0://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km8.gz &\
 	wait
 	zcat km1.gz | grep -P '^<add.v.[^\d]' | sed 's/^<add.v.\(.*\)>\s\(.*\)/add.v \1 \2\/1/g' >> $@
 	zcat km2.gz | grep -P '^<ask.v.[^\d]' | sed 's/^<ask.v.\(.*\)>\s\(.*\)/ask.v \1 \2\/1/g' >> $@
@@ -170,14 +170,14 @@ out2.key: pairs.100.gz
 	zcat km8.gz | grep -P '^<important.a.[^\d]' | sed 's/^<important.a.\(.*\)>\s\(.*\)/important.a \1 \2\/1/g' >> $@
 
 out.key: pairs.100.gz
-	zcat $< | grep -P '^<add.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 6 | gzip > km1.gz &\
-	zcat $< | grep -P '^<ask.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km2.gz &\
-	zcat $< | grep -P '^<win.v' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 4 | gzip > km3.gz &\
-	zcat $< | grep -P '^<argument.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km4.gz &\
-	zcat $< | grep -P '^<interest.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km5.gz &\
-	zcat $< | grep -P '^<paper.n' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km6.gz &\
-	zcat $< | grep -P '^<different.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km7.gz &\
-	zcat $< | grep -P '^<important.[aj]' | scode -i 50 ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km8.gz &\
+	zcat $< | grep -P '^<add.v' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 6 | gzip > km1.gz &\
+	zcat $< | grep -P '^<ask.v' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km2.gz &\
+	zcat $< | grep -P '^<win.v' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 4 | gzip > km3.gz &\
+	zcat $< | grep -P '^<argument.n' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km4.gz &\
+	zcat $< | grep -P '^<interest.n' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km5.gz &\
+	zcat $< | grep -P '^<paper.n' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 7 | gzip > km6.gz &\
+	zcat $< | grep -P '^<different.[aj]' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km7.gz &\
+	zcat $< | grep -P '^<important.[aj]' | scode  ${SC_OPTIONS} | perl -ne 'print if s/^1://' | wkmeans ${KM_OPTIONS} -k 5 | gzip > km8.gz &\
 	wait
 	zcat $< | grep -P '^<add.v.[^\d]' | find-sense.py km1.gz >> $@
 	zcat $< | grep -P '^<ask.v.[^\d]' | find-sense.py km2.gz >> $@
@@ -279,7 +279,7 @@ adj.pairs.100.gz: adj.sub.gz pairs.100.gz
 	rm -rf $@.tmp
 
 %.scode.pos.gz: %.pairs.100.gz
-	zcat $< | scode -i 50 ${SC_OPTIONS} | gzip > $@
+	zcat $< | scode  ${SC_OPTIONS} | gzip > $@
 
 pos-cluster-test: adj.scode.pos.gz noun.scode.pos.gz verb.scode.pos.gz
 	./y-cluster-pos-test.py ${SEED} 4 8 16 24 32 40 60 70 80 100 120 150 180 210 240 270
@@ -334,7 +334,7 @@ eval/hdp.exp.random%.ans:
 hdp-input-stats.tab:
 	for tw in ${TEST_WORDS}; do\
 		cat input-hdp-test/$$tw.lemma  | awk '{print $$0 "<sentence>"}' |\
-		../bin/tree-tagger/cmd/tree-tagger-english | ./hdp-vocab-stat.py $$tw >> $@;\
+		../src/tree-tagger/cmd/tree-tagger-english | ./hdp-vocab-stat.py $$tw >> $@;\
 		wait;\
 	done
 

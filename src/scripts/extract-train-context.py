@@ -35,7 +35,7 @@ for l_tok, l_pos, l_lem, line in izip(f_tok, f_pos, f_lem, count(1)):
         if l_lem[i] in lemma_set:
             lempos = l_lem[i] + l_pos[i][0]
             if lempos in lemma_pos:
-                print "%s <%s.%s.%d> %s" % (' '.join(l_tok[i - 3:i]),
+                print "%s <%s.%s.%d> %s" % (' '.join(l_tok[max(0,i - 3):i]),
                                             l_lem[i],
                                             l_pos[i][0].lower(),
                                             lemma_count[lempos].next(),

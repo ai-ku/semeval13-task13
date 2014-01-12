@@ -1,0 +1,5 @@
+- tree-tagger otomatik indirilsin.
+- ukWaC datasi icin downloader mi verilsin?
+- fastsubs output'u verilsin mi ek olarak? Substitute cikarmak normal bir makine icin
+imkansiz (high memory). 
+- LM cikarmak normal bir makinede olanakli olmayabilir.

@@ -2,8 +2,21 @@ run/*.gz
 !run/*.p[yl]
 bin/*
 data/*
-src/*
 !src/scripts
+run/eval/*
+run/*.err
+run/*.out
+run/hdp-wsi/*.err
+run/dummy*
+run/trash
+run/input-hdp-random1-test/
+run/input-hdp-random2-test/
+run/input-hdp-random3-test/
+run/input-hdp-random4-test/
+run/knn/
+run/scode-with-enrich/
+run/scode_vec/
+src/fastsubs/
 
 *.py[cod]
 
